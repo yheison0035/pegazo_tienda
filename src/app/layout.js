@@ -5,6 +5,7 @@ import { getFontClass } from "@/styles/fonts";
 import { buildThemeCss } from "@/styles/themes";
 import "@/styles/globals.css";
 import GlobalUI from "@/components/layout/globalUI";
+import VerticalPreviewCapture from "@/components/verticalPreviewCapture";
 import JsonLd from "@/components/seo/jsonLd";
 import { getSiteUrl, getWebsiteConfig } from "@/lib/website.server";
 import {
@@ -126,6 +127,7 @@ export default async function RootLayout({ children }) {
         <NavProvider>
           <ToastProvider>
             <Providers initialWebsite={website}>
+              <VerticalPreviewCapture />
               {children}
               <GlobalUI />
             </Providers>

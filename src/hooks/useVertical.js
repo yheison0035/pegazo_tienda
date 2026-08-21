@@ -9,7 +9,8 @@ import { getVertical } from "@/config/verticals";
 // dominio (terminología, presentación, entrega, layout, variantes).
 //
 // VISTA PREVIA: se puede forzar un vertical con ?vertical=RESTAURANTE en la URL
-// (se recuerda en localStorage). Para volver al real: ?vertical=none.
+// (lo captura VerticalPreviewCapture en el layout raíz y lo guarda). Para volver
+// al real: ?vertical=none.
 export default function useVertical() {
   const { website } = useWebsiteContext();
   const baseType = getBusinessType(website);
@@ -17,18 +18,14 @@ export default function useVertical() {
   // Override solo en cliente para no romper la hidratación (primer render = real).
   const [override, setOverride] = useState(null);
   useEffect(() => {
-    try {
-      const param = new URLSearchParams(window.location.search).get("vertical");
-      if (param !== null) {
-        const val = param.trim().toUpperCase();
-        if (!val || val === "NONE" || val === "REAL") {
-          localStorage.removeItem("preview_vertical");
-        } else {
-          localStorage.setItem("preview_vertical", val);
-        }
-      }
-      setOverride(localStorage.getItem("preview_vertical"));
-    } catch (_) {}
+    const read = () => {
+      try {
+        setOverride(localStorage.getItem("preview_vertical"));
+      } catch (_) {}
+    };
+    read();
+    window.addEventListener("vertical-preview-change", read);
+    return () => window.removeEventListener("vertical-preview-change", read);
   }, []);
 
   return getVertical(override || baseType);
