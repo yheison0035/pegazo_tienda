@@ -17,7 +17,12 @@ export default function ProductInfo({ product, category }) {
   const {
     ready,
     hasColors,
+    hasSize,
+    colorOptions,
+    sizeOptions,
     selectedColor,
+    selectedSize,
+    selectSize,
     colorStock,
     isWeight,
     qty,
@@ -96,10 +101,11 @@ export default function ProductInfo({ product, category }) {
         <div>
           <p className="text-sm font-medium mb-2">Color</p>
           <div className="flex gap-3 flex-wrap">
-            {product.colors.map((c) => (
+            {colorOptions.map((c) => (
               <button
                 key={c.name}
                 onClick={() => selectColor(c)}
+                title={c.name}
                 className={`
                   w-8 h-8 rounded-full border
                   transition cursor-pointer
@@ -111,6 +117,31 @@ export default function ProductInfo({ product, category }) {
                 `}
                 style={{ backgroundColor: getColorHexByName(c.name) }}
               />
+            ))}
+          </div>
+        </div>
+      )}
+
+      {hasSize && (
+        <div>
+          <p className="text-sm font-medium mb-2">Talla</p>
+          <div className="flex gap-2 flex-wrap">
+            {sizeOptions.map((s) => (
+              <button
+                key={s}
+                onClick={() => selectSize(s)}
+                className={`
+                  min-w-10 rounded-lg border px-3 py-1.5 text-sm font-medium
+                  transition cursor-pointer
+                  ${
+                    selectedSize === s
+                      ? "border-(--cta-primary) bg-(--bg-soft) text-(--text-primary)"
+                      : "border-(--border-soft) text-(--text-muted) hover:bg-(--bg-soft)"
+                  }
+                `}
+              >
+                {s}
+              </button>
             ))}
           </div>
         </div>

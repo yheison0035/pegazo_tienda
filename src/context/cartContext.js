@@ -32,7 +32,7 @@ export function CartProvider({ children }) {
       return { ok: false };
     }
 
-    const key = `${product.id}-${product.color}`;
+    const key = `${product.id}-${product.color ?? ""}-${product.size ?? ""}`;
 
     setItems((prev) => {
       const current = prev.find((p) => p.key === key);

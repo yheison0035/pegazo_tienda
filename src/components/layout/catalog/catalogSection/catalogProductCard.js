@@ -15,7 +15,9 @@ export default function CatalogProductCard({ product, category }) {
   const {
     ready,
     hasColors,
+    hasSize,
     isWeight,
+    colorOptions,
     selectedColor,
     colorStock,
     qty,
@@ -171,7 +173,7 @@ export default function CatalogProductCard({ product, category }) {
 
         {hasColors && (
           <div className="flex items-center gap-2 mt-1">
-            {product.colors.map((c) => (
+            {colorOptions.map((c) => (
               <button
                 key={c.name}
                 onClick={() => selectColor(c)}
@@ -216,47 +218,70 @@ export default function CatalogProductCard({ product, category }) {
         </div>
 
         <div className="mt-auto flex flex-col gap-2">
-          <div className="flex items-center justify-between">
-            <span className="text-xs text-(--text-muted)">Cantidad</span>
+          {/* Con tallas, la elección se hace en la ficha del producto. */}
+          {hasSize ? (
+            <Link
+              href={`/${category}/${product.slug}`}
+              className="
+                w-full
+                flex items-center justify-center gap-1
+                bg-(--cta-primary)
+                hover:bg-(--cta-primary-hover)
+                text-white
+                rounded-xl
+                p-2
+                font-semibold text-sm
+                transition
+                cursor-pointer
+              "
+            >
+              Ver opciones
+            </Link>
+          ) : (
+            <>
+              <div className="flex items-center justify-between">
+                <span className="text-xs text-(--text-muted)">Cantidad</span>
 
-            <div className="flex items-center border border-(--border-soft) rounded-lg overflow-hidden">
+                <div className="flex items-center border border-(--border-soft) rounded-lg overflow-hidden">
+                  <button
+                    onClick={decrementQty}
+                    className="px-2 sm:px-3 py-1 hover:bg-(--bg-soft) cursor-pointer"
+                  >
+                    <MinusIcon className="w-4 h-4" />
+                  </button>
+
+                  <span className="px-3 text-sm font-semibold">{qty}</span>
+
+                  <button
+                    onClick={incrementQty}
+                    disabled={qty >= colorStock}
+                    className="px-2 sm:px-3 py-1 hover:bg-(--bg-soft) disabled:opacity-40 cursor-pointer"
+                  >
+                    <PlusIcon className="w-4 h-4" />
+                  </button>
+                </div>
+              </div>
+
               <button
-                onClick={decrementQty}
-                className="px-2 sm:px-3 py-1 hover:bg-(--bg-soft) cursor-pointer"
+                onClick={handleAddToCart}
+                className="
+                  w-full
+                  flex items-center justify-center gap-1
+                  bg-(--cta-primary)
+                  hover:bg-(--cta-primary-hover)
+                  text-white
+                  rounded-xl
+                  p-2
+                  font-semibold text-sm
+                  transition
+                  cursor-pointer
+                "
               >
-                <MinusIcon className="w-4 h-4" />
+                <ShoppingCartIcon className="w-4 h-4" />
+                {actionLabel}
               </button>
-
-              <span className="px-3 text-sm font-semibold">{qty}</span>
-
-              <button
-                onClick={incrementQty}
-                disabled={qty >= colorStock}
-                className="px-2 sm:px-3 py-1 hover:bg-(--bg-soft) disabled:opacity-40 cursor-pointer"
-              >
-                <PlusIcon className="w-4 h-4" />
-              </button>
-            </div>
-          </div>
-
-          <button
-            onClick={handleAddToCart}
-            className="
-              w-full
-              flex items-center justify-center gap-1
-              bg-(--cta-primary)
-              hover:bg-(--cta-primary-hover)
-              text-white
-              rounded-xl
-              p-2
-              font-semibold text-sm
-              transition
-              cursor-pointer
-            "
-          >
-            <ShoppingCartIcon className="w-4 h-4" />
-            {actionLabel}
-          </button>
+            </>
+          )}
         </div>
       </div>
     </article>
