@@ -12,5 +12,6 @@ export function mapSearchProduct(product) {
     description: product.description,
     category: product.category,
     unit: product.unit,
+    trackStock: product.trackStock,
   };
 }

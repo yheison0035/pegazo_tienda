@@ -49,7 +49,11 @@ export default function useProductCartLogic(product, initialQty = 1) {
   }, [variants, hasColors, hasSize, selectedColor, selectedSize]);
 
   const selectedVariantId = resolved?.variantId ?? variants[0]?.variantId ?? null;
-  const colorStock = resolved?.stock ?? (variants.length === 1 ? variants[0].stock : 0);
+  // Los elaborados sin control de stock (platos) se pueden pedir siempre.
+  const tracksStock = product.trackStock !== false;
+  const rawStock =
+    resolved?.stock ?? (variants.length === 1 ? variants[0].stock : 0);
+  const colorStock = tracksStock ? rawStock : 9999;
 
   // Preselección: color único / talla única / variante única.
   useEffect(() => {
