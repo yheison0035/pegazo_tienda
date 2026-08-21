@@ -18,6 +18,13 @@ export default function useProductCartLogic(product, initialQty = 1) {
   const hasColors = product.colors?.length > 0;
   const itemsInCart = getItemsByProduct(product.id);
 
+  // Venta por peso (fruver / carnicería / súper): la cantidad es en kg (decimal)
+  // y el precio se entiende por kg.
+  const isWeight = product.unit === "PESO";
+  const step = isWeight ? 0.5 : 1;
+  const minQty = isWeight ? 0.5 : 1;
+  const r2 = (n) => Math.round(n * 100) / 100;
+
   useEffect(() => {
     if (hasColors && product.colors.length === 1) {
       selectColor(product.colors[0]);
@@ -37,11 +44,11 @@ export default function useProductCartLogic(product, initialQty = 1) {
   }
 
   function incrementQty() {
-    if (qty < colorStock) setQty((q) => q + 1);
+    setQty((q) => (r2(q + step) <= colorStock ? r2(q + step) : q));
   }
 
   function decrementQty() {
-    setQty((q) => Math.max(1, q - 1));
+    setQty((q) => Math.max(minQty, r2(q - step)));
   }
 
   function handleAddToCart() {
@@ -51,7 +58,11 @@ export default function useProductCartLogic(product, initialQty = 1) {
     }
 
     if (qty > colorStock) {
-      setError(`Solo hay ${colorStock} unidades disponibles`);
+      setError(
+        isWeight
+          ? `Solo hay ${colorStock} kg disponibles`
+          : `Solo hay ${colorStock} unidades disponibles`
+      );
       return;
     }
 
@@ -92,6 +103,7 @@ export default function useProductCartLogic(product, initialQty = 1) {
   return {
     ready,
     hasColors,
+    isWeight,
     selectedColor,
     colorStock,
     qty,

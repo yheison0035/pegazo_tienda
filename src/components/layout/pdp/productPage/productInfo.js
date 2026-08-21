@@ -19,6 +19,7 @@ export default function ProductInfo({ product, category }) {
     hasColors,
     selectedColor,
     colorStock,
+    isWeight,
     qty,
     error,
     selectColor,
@@ -53,6 +54,12 @@ export default function ProductInfo({ product, category }) {
       <div className="flex items-end gap-3 flex-wrap">
         <span className="text-2xl sm:text-3xl font-bold text-(--cta-primary)">
           ${product.price.toLocaleString()}
+          {isWeight && (
+            <span className="text-base font-medium text-(--text-muted)">
+              {" "}
+              / kg
+            </span>
+          )}
         </span>
 
         {product.oldPrice && (
@@ -110,7 +117,9 @@ export default function ProductInfo({ product, category }) {
       )}
 
       <div>
-        <p className="text-sm font-medium mb-2">Cantidad</p>
+        <p className="text-sm font-medium mb-2">
+          {isWeight ? "Cantidad (kg)" : "Cantidad"}
+        </p>
         <div className="inline-flex items-center border rounded-xl">
           <button onClick={decrementQty} className="p-3 cursor-pointer">
             <MinusIcon className="w-4 h-4" />

@@ -11,5 +11,6 @@ export function mapSearchProduct(product) {
     image: product.image,
     description: product.description,
     category: product.category,
+    unit: product.unit,
   };
 }

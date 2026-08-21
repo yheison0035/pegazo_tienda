@@ -15,6 +15,7 @@ export default function CatalogProductCard({ product, category }) {
   const {
     ready,
     hasColors,
+    isWeight,
     selectedColor,
     colorStock,
     qty,
@@ -66,6 +67,12 @@ export default function CatalogProductCard({ product, category }) {
             <div className="flex items-end gap-2">
               <span className="text-base font-bold text-(--cta-primary)">
                 ${product.price.toLocaleString()}
+                {isWeight && (
+                  <span className="text-xs font-medium text-(--text-muted)">
+                    {" "}
+                    /kg
+                  </span>
+                )}
               </span>
               {product.oldPrice && (
                 <span className="text-xs line-through text-(--text-muted)">
@@ -147,6 +154,12 @@ export default function CatalogProductCard({ product, category }) {
         <div className="flex items-end gap-2">
           <span className="text-lg sm:text-xl font-bold text-(--cta-primary)">
             ${product.price.toLocaleString()}
+            {isWeight && (
+              <span className="text-xs font-medium text-(--text-muted)">
+                {" "}
+                /kg
+              </span>
+            )}
           </span>
 
           {product.oldPrice && (
