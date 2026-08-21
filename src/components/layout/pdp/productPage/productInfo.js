@@ -1,6 +1,7 @@
 "use client";
 
 import useProductCartLogic from "@/hooks/useProductCartLogic";
+import useVertical from "@/hooks/useVertical";
 import { getColorHexByName } from "@/utils/getColor";
 import {
   PlusIcon,
@@ -27,6 +28,7 @@ export default function ProductInfo({ product, category }) {
     actionLabel,
     alreadyInCart,
   } = useProductCartLogic({ ...product, category }, 1);
+  const v = useVertical();
 
   if (!ready) return null;
 
@@ -65,19 +67,23 @@ export default function ProductInfo({ product, category }) {
         )}
       </div>
 
-      <div className="flex items-center gap-2 text-sm">
-        <TruckIcon className="w-5 h-5" />
-        <span
-          className={freeShipping ? "text-(--success)" : "text-(--text-muted)"}
-        >
-          {freeShipping ? "Envío gratis" : "Envío gratis desde $100.000"}
-        </span>
-      </div>
+      {v.fulfillment.includes("shipping") && (
+        <div className="flex items-center gap-2 text-sm">
+          <TruckIcon className="w-5 h-5" />
+          <span
+            className={freeShipping ? "text-(--success)" : "text-(--text-muted)"}
+          >
+            {freeShipping ? "Envío gratis" : "Envío gratis desde $100.000"}
+          </span>
+        </div>
+      )}
 
-      <div className="flex items-center gap-2 text-xs text-(--text-muted)">
-        <ShieldCheckIcon className="w-4 h-4 text-(--success)" />
-        Compra segura · Garantía incluida
-      </div>
+      {v.warrantyBadge && (
+        <div className="flex items-center gap-2 text-xs text-(--text-muted)">
+          <ShieldCheckIcon className="w-4 h-4 text-(--success)" />
+          Compra segura · Garantía incluida
+        </div>
+      )}
 
       {hasColors && (
         <div>
@@ -157,7 +163,7 @@ export default function ProductInfo({ product, category }) {
           "
         >
           <ShoppingCartIcon className="w-5 h-5" />
-          {actionLabel}
+          {alreadyInCart ? actionLabel : v.addToCart}
         </button>
 
         <button
@@ -170,7 +176,7 @@ export default function ProductInfo({ product, category }) {
             hover:bg-(--bg-soft) cursor-pointer
           "
         >
-          Comprar ahora
+          {v.buyNow}
         </button>
       </div>
     </div>

@@ -3,18 +3,20 @@
 import { useState } from "react";
 import ProductFeatures from "./productDescription/productFeatures";
 import ProductSpecifications from "./productDescription/productSpecifications";
+import useVertical from "@/hooks/useVertical";
 
 const DESCRIPTION_LIMIT = 500;
 
 export default function ProductDescription({ product }) {
   const [expanded, setExpanded] = useState(false);
+  const v = useVertical();
+  // Fichas técnicas (características/especificaciones) solo en verticales que las
+  // usan (electrónica/televentas). Un restaurante o fruver no las muestra.
+  const showExtra =
+    v.showSpecs &&
+    (product.features.length > 0 || product.specifications.length > 0);
 
-  if (
-    !product.description &&
-    product.features.length === 0 &&
-    product.specifications.length === 0
-  )
-    return null;
+  if (!product.description && !showExtra) return null;
 
   const hasLongDescription =
     product.description && product.description.length > DESCRIPTION_LIMIT;
@@ -54,11 +56,11 @@ export default function ProductDescription({ product }) {
         </div>
       )}
 
-      {product.features.length > 0 && (
+      {showExtra && product.features.length > 0 && (
         <ProductFeatures features={product.features} />
       )}
 
-      {product.specifications.length > 0 && (
+      {showExtra && product.specifications.length > 0 && (
         <ProductSpecifications specifications={product.specifications} />
       )}
     </section>

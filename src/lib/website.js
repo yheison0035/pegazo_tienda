@@ -90,3 +90,8 @@ export function getFooterText(website) {
     "Cumplimos con la Ley 1480 de 2011 y la Ley 1581 de 2012."
   );
 }
+
+// Tipo de negocio (BusinessType de Pegazo) dueño de la tienda.
+export function getBusinessType(website) {
+  return website?.company?.type || null;
+}
