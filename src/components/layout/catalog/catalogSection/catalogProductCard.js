@@ -9,6 +9,7 @@ import Link from "next/link";
 import ProductImage from "@/components/ui/productImage";
 import { getColorHexByName } from "@/utils/getColor";
 import useProductCartLogic from "@/hooks/useProductCartLogic";
+import useVertical from "@/hooks/useVertical";
 
 export default function CatalogProductCard({ product, category }) {
   const {
@@ -25,8 +26,68 @@ export default function CatalogProductCard({ product, category }) {
     alreadyInCart,
     actionLabel,
   } = useProductCartLogic({ ...product, category }, 1);
+  const v = useVertical();
 
   if (!ready) return null;
+
+  // Layout "menú" (restaurante / comida rápida / cafetería): tarjeta horizontal
+  // con foto + nombre + descripción + precio y botón de agregar.
+  if (v.layout === "menu") {
+    return (
+      <article className="group flex gap-3 sm:gap-4 rounded-2xl border border-(--border-soft) bg-(--bg-page) p-3 transition-all hover:shadow-(--shadow-lg)">
+        <Link
+          href={`/${category}/${product.slug}`}
+          className="relative h-24 w-24 flex-none overflow-hidden rounded-xl bg-(--bg-soft) sm:h-28 sm:w-28"
+        >
+          <ProductImage
+            product={product}
+            className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
+          />
+          {product.discount > 0 && (
+            <span className="absolute left-1.5 top-1.5 rounded-full bg-(--danger) px-1.5 py-0.5 text-[10px] font-bold text-white">
+              -{product.discount}%
+            </span>
+          )}
+        </Link>
+
+        <div className="flex min-w-0 flex-1 flex-col">
+          <Link href={`/${category}/${product.slug}`}>
+            <h3 className="line-clamp-1 font-semibold text-(--text-primary) hover:underline">
+              {product.name}
+            </h3>
+          </Link>
+          {product.description && (
+            <p className="mt-0.5 line-clamp-2 text-xs text-(--text-muted)">
+              {product.description}
+            </p>
+          )}
+
+          <div className="mt-auto flex items-center justify-between gap-2 pt-2">
+            <div className="flex items-end gap-2">
+              <span className="text-base font-bold text-(--cta-primary)">
+                ${product.price.toLocaleString()}
+              </span>
+              {product.oldPrice && (
+                <span className="text-xs line-through text-(--text-muted)">
+                  ${product.oldPrice.toLocaleString()}
+                </span>
+              )}
+            </div>
+            <button
+              onClick={handleAddToCart}
+              className="flex flex-none items-center gap-1 rounded-lg bg-(--cta-primary) px-3 py-1.5 text-sm font-semibold text-white transition hover:bg-(--cta-primary-hover) cursor-pointer"
+            >
+              <PlusIcon className="h-4 w-4" />
+              {alreadyInCart ? `✔ ${qty}` : v.addToCart}
+            </button>
+          </div>
+          {error && (
+            <p className="mt-1 text-xs font-medium text-(--danger)">{error}</p>
+          )}
+        </div>
+      </article>
+    );
+  }
 
   return (
     <article

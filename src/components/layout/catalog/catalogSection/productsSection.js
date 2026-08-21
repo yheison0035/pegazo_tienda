@@ -6,9 +6,17 @@ import SkeletonGrid from "@/components/ui/skeletons/skeletonGrid";
 import Breadcrumbs from "../breadcrumbs";
 import MobileFiltersBar from "@/components/filters/mobileFiltersBar";
 import { DesktopSort } from "@/components/filters/desktopSort";
+import useVertical from "@/hooks/useVertical";
 
 export default function ProductsSection({ category, catalog }) {
   const { products, filters, loadMore, hasMore, loadingMore } = catalog;
+  const v = useVertical();
+  // En verticales de menú (restaurante/comida) el catálogo se lista en filas
+  // anchas (1-2 columnas); en retail sigue en grilla densa.
+  const isMenu = v.layout === "menu";
+  const gridClass = isMenu
+    ? "grid grid-cols-1 lg:grid-cols-2 gap-4"
+    : "grid grid-cols-2 md:grid-cols-3 gap-6";
 
   const sentinelRef = useRef(null);
   const observerRef = useRef(null);
@@ -44,7 +52,7 @@ export default function ProductsSection({ category, catalog }) {
         )}
 
         {products.length > 0 && (
-          <div className="grid grid-cols-2 md:grid-cols-3 gap-6">
+          <div className={gridClass}>
             {products.map((product) => (
               <ProductCard
                 key={`${product.id}-${product.slug}`}
