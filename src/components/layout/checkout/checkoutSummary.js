@@ -3,16 +3,30 @@
 import { useCart } from "@/context/cartContext";
 import { calculateShipping } from "@/utils/shipping";
 import { useCheckout } from "@/context/checkoutContext";
+import useVertical from "@/hooks/useVertical";
 import CheckoutCartItems from "./components/checkoutCartItems";
 import { LockClosedIcon } from "@heroicons/react/24/outline";
 
+const DELIVERY_ROW = {
+  local_delivery: "Domicilio",
+  pickup: "Recoger en tienda",
+};
+
 export default function CheckoutSummary() {
   const { items } = useCart();
-  const { isFormValid, setShowErrors, setShowConfirm } = useCheckout();
+  const { isFormValid, setShowErrors, setShowConfirm, deliveryMethod } =
+    useCheckout();
+  const v = useVertical();
 
   const subtotal = items.reduce((sum, i) => sum + i.price * i.quantity, 0);
-  const { cost, label, message } = calculateShipping(subtotal);
+  // El envío por transportadora solo aplica a "envío a domicilio".
+  const ship =
+    deliveryMethod === "shipping"
+      ? calculateShipping(subtotal)
+      : { cost: 0, label: "Gratis", message: "" };
+  const { cost, label, message } = ship;
   const total = subtotal + cost;
+  const deliveryRowLabel = DELIVERY_ROW[deliveryMethod]; // undefined en dine_in
 
   const { valid } = isFormValid();
 
@@ -27,24 +41,33 @@ export default function CheckoutSummary() {
   return (
     <>
       <aside className="bg-(--bg-page) rounded-xl p-6 shadow-(--shadow-sm) h-fit">
-        <h3 className="text-lg font-semibold mb-4">Resumen de tu pedido</h3>
+        <h3 className="text-lg font-semibold mb-4">
+          Resumen de tu {v.orderWord}
+        </h3>
 
         <CheckoutCartItems />
 
         <div className="mt-6 space-y-2 text-sm">
           <Row label="Subtotal" value={`$${subtotal.toLocaleString()}`} />
 
-          <div className="flex justify-between">
-            <div className="flex flex-col">
-              <span className="text-(--text-muted)">Envío</span>
-              <span className="text-xs text-(--text-muted)">{message}</span>
+          {deliveryMethod === "shipping" ? (
+            <div className="flex justify-between">
+              <div className="flex flex-col">
+                <span className="text-(--text-muted)">Envío</span>
+                <span className="text-xs text-(--text-muted)">{message}</span>
+              </div>
+              <span
+                className={`font-medium ${cost === 0 ? "text-(--success)" : ""}`}
+              >
+                {label}
+              </span>
             </div>
-            <span
-              className={`font-medium ${cost === 0 ? "text-(--success)" : ""}`}
-            >
-              {label}
-            </span>
-          </div>
+          ) : deliveryRowLabel ? (
+            <div className="flex justify-between">
+              <span className="text-(--text-muted)">{deliveryRowLabel}</span>
+              <span className="font-medium text-(--success)">Gratis</span>
+            </div>
+          ) : null}
         </div>
 
         <hr className="my-4 border-(--border-soft)" />

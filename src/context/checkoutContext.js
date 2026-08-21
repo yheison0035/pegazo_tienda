@@ -2,12 +2,15 @@
 
 import { createContext, useContext, useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
+import useVertical from "@/hooks/useVertical";
 
 const CheckoutContext = createContext(null);
 
 export function CheckoutProvider({ children, wompiReady = false }) {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const vertical = useVertical();
+  const modes = vertical.fulfillment?.length ? vertical.fulfillment : ["shipping"];
 
   const [formData, setFormData] = useState({
     email: "",
@@ -26,7 +29,19 @@ export function CheckoutProvider({ children, wompiReady = false }) {
     billingLastName: "",
     billingPhone: "",
     billingAddress: "",
+    // Instrucciones del cliente (referencias, nº de mesa, etc.)
+    notes: "",
   });
+
+  // Modo de entrega elegido (por defecto el primero que ofrece el vertical).
+  const [deliveryMethod, setDeliveryMethod] = useState(modes[0]);
+  useEffect(() => {
+    if (!modes.includes(deliveryMethod)) setDeliveryMethod(modes[0]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [modes.join(",")]);
+  // ¿Este modo necesita dirección de entrega?
+  const needsAddress =
+    deliveryMethod === "shipping" || deliveryMethod === "local_delivery";
 
   const [paymentMethod, setPaymentMethod] = useState(null);
   const [isLocked, setIsLocked] = useState(false);
@@ -71,7 +86,7 @@ export function CheckoutProvider({ children, wompiReady = false }) {
       errors.email = "Ingresa un correo válido";
     }
 
-    if (formData.address.length < 6) {
+    if (needsAddress && formData.address.length < 6) {
       errors.address = "La dirección parece incompleta";
     }
 
@@ -81,21 +96,21 @@ export function CheckoutProvider({ children, wompiReady = false }) {
       errors.phone = "Ingresa un teléfono válido";
     }
 
-    if (formData.isHardToAccess && !formData.addressDetail) {
+    if (needsAddress && formData.isHardToAccess && !formData.addressDetail) {
       errors.addressDetail = "Agrega una referencia para facilitar la entrega";
     }
 
-    const required = [
-      "email",
-      "department",
-      "city",
-      "firstName",
-      "lastName",
-      "phone",
-      "address",
-      "neighborhood",
-      "documentNumber",
-    ];
+    // Campos siempre requeridos + los de dirección solo si el modo la necesita.
+    const required = ["email", "firstName", "lastName", "phone"];
+    if (needsAddress) {
+      required.push(
+        "department",
+        "city",
+        "address",
+        "neighborhood",
+        "documentNumber"
+      );
+    }
 
     required.forEach((key) => {
       if (!formData[key]) {
@@ -135,6 +150,10 @@ export function CheckoutProvider({ children, wompiReady = false }) {
       value={{
         formData,
         handleChange,
+        deliveryMethod,
+        setDeliveryMethod,
+        deliveryModes: modes,
+        needsAddress,
         paymentMethod,
         setPaymentMethod,
         isLocked,

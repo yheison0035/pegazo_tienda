@@ -22,6 +22,8 @@ export default function CheckoutPage() {
     setIsSubmitting,
     paymentMethod,
     formData,
+    deliveryMethod,
+    needsAddress,
   } = useCheckout();
 
   const { items, clearCart } = useCart();
@@ -55,7 +57,10 @@ export default function CheckoutPage() {
         (sum, item) => sum + item.price * item.quantity,
         0,
       );
-      const { cost: shippingCost } = calculateShipping(subtotal);
+      // El costo de envío por transportadora solo aplica a "envío a domicilio".
+      // Domicilio local / recoger en tienda / mesa no lo cobran aquí.
+      const { cost: shippingCalc } = calculateShipping(subtotal);
+      const shippingCost = deliveryMethod === "shipping" ? shippingCalc : 0;
 
       const order = await createOrder({
         customer: {
@@ -64,12 +69,19 @@ export default function CheckoutPage() {
           lastName: formData.lastName,
           phone: formData.phone,
           documentNumber: formData.documentNumber || undefined,
-          department: formData.department,
-          city: formData.city,
-          address: formData.address,
-          addressDetail: formData.addressDetail || undefined,
-          neighborhood: formData.neighborhood || undefined,
-          isHardToAccess: Boolean(formData.isHardToAccess),
+          // La dirección solo se envía cuando el modo la necesita.
+          department: needsAddress ? formData.department : undefined,
+          city: needsAddress ? formData.city : undefined,
+          address: needsAddress ? formData.address : undefined,
+          addressDetail: needsAddress
+            ? formData.addressDetail || undefined
+            : undefined,
+          neighborhood: needsAddress
+            ? formData.neighborhood || undefined
+            : undefined,
+          isHardToAccess: needsAddress
+            ? Boolean(formData.isHardToAccess)
+            : false,
           billingSameAsShipping: Boolean(billingSameAsShipping),
           ...(billingSameAsShipping
             ? {}
@@ -85,6 +97,8 @@ export default function CheckoutPage() {
         // y queda EN_VALIDACION hasta que Wompi confirme.
         paymentMethod: paymentMethod === "online" ? "TRANSFERENCIA" : "EFECTIVO",
         shippingCost,
+        deliveryMethod,
+        notes: formData.notes || undefined,
       });
 
       if (paymentMethod === "online") {
