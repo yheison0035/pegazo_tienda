@@ -30,3 +30,27 @@ export async function updateCustomerMe({ name, phone, documentNumber }) {
     body: JSON.stringify({ name, phone, documentNumber }),
   });
 }
+
+export async function googleAuthCustomer(credential) {
+  return apiFetch("/ecommerce/auth/google", {
+    method: "POST",
+    auth: false,
+    body: JSON.stringify({ credential }),
+  });
+}
+
+export async function forgotPasswordCustomer(email) {
+  return apiFetch("/ecommerce/auth/forgot-password", {
+    method: "POST",
+    auth: false,
+    body: JSON.stringify({ email }),
+  });
+}
+
+export async function resetPasswordCustomer({ token, password }) {
+  return apiFetch("/ecommerce/auth/reset-password", {
+    method: "POST",
+    auth: false,
+    body: JSON.stringify({ token, password }),
+  });
+}

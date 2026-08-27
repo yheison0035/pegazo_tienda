@@ -8,9 +8,12 @@ import {
   useState,
 } from "react";
 import {
+  forgotPasswordCustomer,
   getCustomerMe,
+  googleAuthCustomer,
   loginCustomer,
   registerCustomer,
+  resetPasswordCustomer,
   updateCustomerMe,
 } from "@/lib/utils/api/routes/customer";
 
@@ -90,6 +93,34 @@ export function CustomerProvider({ children }) {
     [refresh],
   );
 
+  const loginWithGoogle = useCallback(
+    async (credential) => {
+      const res = await googleAuthCustomer(credential);
+      const token = res?.data?.access_token;
+      if (token) writeToken(token);
+      setCustomer(res?.data?.customer || null);
+      await refresh();
+      return res?.data?.customer || null;
+    },
+    [refresh],
+  );
+
+  const forgotPassword = useCallback(async (email) => {
+    return forgotPasswordCustomer(email);
+  }, []);
+
+  const resetPassword = useCallback(
+    async ({ token, password }) => {
+      const res = await resetPasswordCustomer({ token, password });
+      const t = res?.data?.access_token;
+      if (t) writeToken(t);
+      setCustomer(res?.data?.customer || null);
+      await refresh();
+      return res;
+    },
+    [refresh],
+  );
+
   const updateProfile = useCallback(async (payload) => {
     const res = await updateCustomerMe(payload);
     setCustomer(res?.data?.customer || null);
@@ -111,6 +142,9 @@ export function CustomerProvider({ children }) {
         isAuthenticated: !!customer,
         login,
         register,
+        loginWithGoogle,
+        forgotPassword,
+        resetPassword,
         updateProfile,
         logout,
         refresh,

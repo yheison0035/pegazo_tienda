@@ -5,6 +5,13 @@ import Header from "@/components/layout/header";
 import Footer from "@/components/layout/footer";
 import Container from "@/components/layout/container";
 import { useCustomer } from "@/context/customerContext";
+import {
+  TextField,
+  PasswordField,
+  SubmitButton,
+  validators,
+} from "@/components/auth/authFields";
+import GoogleButton from "@/components/auth/googleButton";
 
 const money = (n) =>
   new Intl.NumberFormat("es-CO", {
@@ -22,163 +29,283 @@ const ORDER_STATUS = {
   DEVUELTA: "Devuelto",
 };
 
-function Field({ label, ...props }) {
+function TabButton({ active, onClick, children }) {
   return (
-    <label className="block">
-      <span className="mb-1 block text-sm font-medium text-(--text-primary)">
-        {label}
-      </span>
-      <input
-        {...props}
-        className="w-full rounded-xl border border-(--border-soft) bg-(--bg-page) px-3 py-2.5 text-(--text-primary) outline-none transition focus:border-(--brand-accent)"
-      />
-    </label>
+    <button
+      type="button"
+      onClick={onClick}
+      className={`flex-1 cursor-pointer rounded-lg py-2 text-sm font-semibold transition ${
+        active
+          ? "bg-(--brand-accent) text-white"
+          : "text-(--text-muted) hover:text-(--text-primary)"
+      }`}
+    >
+      {children}
+    </button>
+  );
+}
+
+function LinkButton({ onClick, children }) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className="cursor-pointer font-semibold text-(--brand-accent) hover:underline"
+    >
+      {children}
+    </button>
   );
 }
 
 function AuthPanel() {
-  const { login, register } = useCustomer();
-  const [tab, setTab] = useState("login"); // 'login' | 'register'
+  const { login, register, loginWithGoogle, forgotPassword } = useCustomer();
+  const [mode, setMode] = useState("login"); // 'login' | 'register' | 'forgot'
   const [form, setForm] = useState({
     name: "",
     email: "",
     password: "",
     phone: "",
   });
-  const [error, setError] = useState("");
+  const [errors, setErrors] = useState({});
+  const [touched, setTouched] = useState({});
+  const [formError, setFormError] = useState("");
+  const [ok, setOk] = useState("");
   const [busy, setBusy] = useState(false);
 
-  const set = (k) => (e) => setForm((f) => ({ ...f, [k]: e.target.value }));
+  const set = (k) => (e) => {
+    const value = e.target.value;
+    setForm((f) => ({ ...f, [k]: value }));
+    if (touched[k]) setErrors((er) => ({ ...er, [k]: fieldError(k, value) }));
+  };
+  const blur = (k) => () => {
+    setTouched((t) => ({ ...t, [k]: true }));
+    setErrors((er) => ({ ...er, [k]: fieldError(k, form[k]) }));
+  };
+
+  function fieldError(k, value) {
+    if (k === "name") return mode === "register" ? validators.name(value) : "";
+    if (k === "email") return validators.email(value);
+    if (k === "password")
+      return mode === "login"
+        ? validators.loginPassword(value)
+        : validators.password(value);
+    if (k === "phone") return validators.phone(value);
+    return "";
+  }
+
+  function validateAll() {
+    const keys =
+      mode === "login"
+        ? ["email", "password"]
+        : mode === "forgot"
+          ? ["email"]
+          : ["name", "email", "password", "phone"];
+    const next = {};
+    keys.forEach((k) => {
+      const e = fieldError(k, form[k]);
+      if (e) next[k] = e;
+    });
+    setErrors(next);
+    setTouched(Object.fromEntries(keys.map((k) => [k, true])));
+    return Object.keys(next).length === 0;
+  }
+
+  const switchMode = (m) => {
+    setMode(m);
+    setErrors({});
+    setTouched({});
+    setFormError("");
+    setOk("");
+  };
 
   const submit = async (e) => {
     e.preventDefault();
-    setError("");
+    setFormError("");
+    setOk("");
+    if (!validateAll()) return;
     setBusy(true);
     try {
-      if (tab === "login") {
+      if (mode === "login") {
         await login({ email: form.email, password: form.password });
-      } else {
+      } else if (mode === "register") {
         await register({
           name: form.name,
           email: form.email,
           password: form.password,
           phone: form.phone || undefined,
         });
+      } else {
+        const res = await forgotPassword(form.email);
+        setOk(
+          res?.message ||
+            "Si el correo está registrado, te enviamos un enlace para restablecer tu contraseña.",
+        );
       }
     } catch (err) {
-      setError(err?.message || "No se pudo completar. Intenta de nuevo.");
+      setFormError(err?.message || "No se pudo completar. Intenta de nuevo.");
     } finally {
       setBusy(false);
     }
   };
 
+  const onGoogle = async (credential) => {
+    setFormError("");
+    setBusy(true);
+    try {
+      await loginWithGoogle(credential);
+    } catch (err) {
+      setFormError(err?.message || "No se pudo entrar con Google.");
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const title =
+    mode === "forgot"
+      ? "Restablecer contraseña"
+      : mode === "register"
+        ? "Crear cuenta"
+        : "Iniciar sesión";
+
   return (
     <div className="mx-auto w-full max-w-md">
-      <div className="mb-6 flex rounded-xl border border-(--border-soft) p-1">
-        {[
-          ["login", "Iniciar sesión"],
-          ["register", "Crear cuenta"],
-        ].map(([v, label]) => (
-          <button
-            key={v}
-            type="button"
-            onClick={() => {
-              setTab(v);
-              setError("");
-            }}
-            className={`flex-1 rounded-lg py-2 text-sm font-semibold transition ${
-              tab === v
-                ? "bg-(--brand-accent) text-white"
-                : "text-(--text-muted) hover:text-(--text-primary)"
-            }`}
+      {mode !== "forgot" && (
+        <div className="mb-6 flex rounded-xl border border-(--border-soft) p-1">
+          <TabButton
+            active={mode === "login"}
+            onClick={() => switchMode("login")}
           >
-            {label}
-          </button>
-        ))}
-      </div>
+            Iniciar sesión
+          </TabButton>
+          <TabButton
+            active={mode === "register"}
+            onClick={() => switchMode("register")}
+          >
+            Crear cuenta
+          </TabButton>
+        </div>
+      )}
 
-      <form onSubmit={submit} className="space-y-4">
-        {tab === "register" && (
-          <Field
+      {mode === "forgot" && (
+        <p className="mb-5 text-center text-sm text-(--text-muted)">
+          Escribe tu correo y te enviaremos un enlace para crear una nueva
+          contraseña.
+        </p>
+      )}
+
+      <form onSubmit={submit} noValidate className="space-y-4">
+        {mode === "register" && (
+          <TextField
             label="Nombre completo"
             type="text"
-            required
             value={form.name}
             onChange={set("name")}
+            onBlur={blur("name")}
+            error={touched.name && errors.name}
             autoComplete="name"
           />
         )}
-        <Field
+
+        <TextField
           label="Correo electrónico"
           type="email"
-          required
           value={form.email}
           onChange={set("email")}
+          onBlur={blur("email")}
+          error={touched.email && errors.email}
           autoComplete="email"
+          placeholder="tucorreo@ejemplo.com"
         />
-        <Field
-          label="Contraseña"
-          type="password"
-          required
-          minLength={6}
-          value={form.password}
-          onChange={set("password")}
-          autoComplete={tab === "login" ? "current-password" : "new-password"}
-        />
-        {tab === "register" && (
-          <Field
+
+        {mode !== "forgot" && (
+          <PasswordField
+            label="Contraseña"
+            value={form.password}
+            onChange={set("password")}
+            onBlur={blur("password")}
+            error={touched.password && errors.password}
+            autoComplete={
+              mode === "login" ? "current-password" : "new-password"
+            }
+            hint={mode === "register" ? "Mínimo 6 caracteres." : undefined}
+          />
+        )}
+
+        {mode === "register" && (
+          <TextField
             label="Teléfono (opcional)"
             type="tel"
+            inputMode="numeric"
             value={form.phone}
             onChange={set("phone")}
+            onBlur={blur("phone")}
+            error={touched.phone && errors.phone}
             autoComplete="tel"
           />
         )}
 
-        {error && (
+        {mode === "login" && (
+          <div className="text-right">
+            <LinkButton onClick={() => switchMode("forgot")}>
+              ¿Olvidaste tu contraseña?
+            </LinkButton>
+          </div>
+        )}
+
+        {formError && (
           <p className="rounded-lg bg-red-500/10 px-3 py-2 text-sm text-red-600">
-            {error}
+            {formError}
+          </p>
+        )}
+        {ok && (
+          <p className="rounded-lg bg-emerald-500/10 px-3 py-2 text-sm text-emerald-600">
+            {ok}
           </p>
         )}
 
-        <button
-          type="submit"
-          disabled={busy}
-          className="w-full rounded-xl bg-(--cta-primary) py-3 font-semibold text-white transition hover:opacity-90 disabled:opacity-60"
-        >
-          {busy
-            ? "Un momento…"
-            : tab === "login"
-              ? "Entrar"
-              : "Crear mi cuenta"}
-        </button>
+        <SubmitButton loading={busy}>
+          {mode === "login"
+            ? "Entrar"
+            : mode === "register"
+              ? "Crear mi cuenta"
+              : "Enviar enlace"}
+        </SubmitButton>
       </form>
 
-      <p className="mt-4 text-center text-sm text-(--text-muted)">
-        {tab === "login" ? (
-          <>
-            ¿No tienes cuenta?{" "}
-            <button
-              type="button"
-              onClick={() => setTab("register")}
-              className="font-semibold text-(--brand-accent) hover:underline"
-            >
-              Créala aquí
-            </button>
-          </>
-        ) : (
-          <>
-            ¿Ya tienes cuenta?{" "}
-            <button
-              type="button"
-              onClick={() => setTab("login")}
-              className="font-semibold text-(--brand-accent) hover:underline"
-            >
-              Inicia sesión
-            </button>
-          </>
-        )}
-      </p>
+      {mode === "forgot" ? (
+        <p className="mt-4 text-center text-sm text-(--text-muted)">
+          <LinkButton onClick={() => switchMode("login")}>
+            Volver a iniciar sesión
+          </LinkButton>
+        </p>
+      ) : (
+        <>
+          <div className="mt-5">
+            <GoogleButton
+              text={mode === "register" ? "signup_with" : "signin_with"}
+              onCredential={onGoogle}
+              onError={(m) => setFormError(m)}
+            />
+          </div>
+          <p className="mt-5 text-center text-sm text-(--text-muted)">
+            {mode === "login" ? (
+              <>
+                ¿No tienes cuenta?{" "}
+                <LinkButton onClick={() => switchMode("register")}>
+                  Créala aquí
+                </LinkButton>
+              </>
+            ) : (
+              <>
+                ¿Ya tienes cuenta?{" "}
+                <LinkButton onClick={() => switchMode("login")}>
+                  Inicia sesión
+                </LinkButton>
+              </>
+            )}
+          </p>
+        </>
+      )}
     </div>
   );
 }
@@ -190,6 +317,7 @@ function AccountPanel() {
     phone: customer?.phone || "",
     documentNumber: customer?.document || "",
   });
+  const [errors, setErrors] = useState({});
   const [msg, setMsg] = useState("");
   const [busy, setBusy] = useState(false);
   const set = (k) => (e) => setForm((f) => ({ ...f, [k]: e.target.value }));
@@ -197,6 +325,13 @@ function AccountPanel() {
   const save = async (e) => {
     e.preventDefault();
     setMsg("");
+    const nameErr = validators.name(form.name);
+    const phoneErr = validators.phone(form.phone);
+    const next = {};
+    if (nameErr) next.name = nameErr;
+    if (phoneErr) next.phone = phoneErr;
+    setErrors(next);
+    if (Object.keys(next).length) return;
     setBusy(true);
     try {
       await updateProfile({
@@ -214,39 +349,42 @@ function AccountPanel() {
 
   return (
     <div className="mx-auto grid w-full max-w-4xl gap-8 md:grid-cols-2">
-      {/* Perfil */}
       <section>
         <div className="mb-4 flex items-center justify-between">
           <h2 className="text-lg font-bold text-(--text-primary)">Mis datos</h2>
           <button
             type="button"
             onClick={logout}
-            className="text-sm font-medium text-(--text-muted) hover:text-(--brand-accent)"
+            className="cursor-pointer text-sm font-medium text-(--text-muted) hover:text-(--brand-accent)"
           >
             Cerrar sesión
           </button>
         </div>
-        <form onSubmit={save} className="space-y-4">
-          <Field
+        <form onSubmit={save} noValidate className="space-y-4">
+          <TextField
             label="Nombre completo"
             type="text"
             value={form.name}
             onChange={set("name")}
+            error={errors.name}
           />
-          <Field
+          <TextField
             label="Correo electrónico"
             type="email"
             value={customer?.email || ""}
             disabled
             readOnly
+            className="cursor-not-allowed opacity-70"
           />
-          <Field
+          <TextField
             label="Teléfono"
             type="tel"
+            inputMode="numeric"
             value={form.phone}
             onChange={set("phone")}
+            error={errors.phone}
           />
-          <Field
+          <TextField
             label="Documento"
             type="text"
             value={form.documentNumber}
@@ -260,14 +398,13 @@ function AccountPanel() {
           <button
             type="submit"
             disabled={busy}
-            className="rounded-xl bg-(--cta-primary) px-5 py-2.5 font-semibold text-white transition hover:opacity-90 disabled:opacity-60"
+            className="cursor-pointer rounded-xl bg-(--cta-primary) px-5 py-2.5 font-semibold text-white transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-60"
           >
             {busy ? "Guardando…" : "Guardar cambios"}
           </button>
         </form>
       </section>
 
-      {/* Pedidos */}
       <section>
         <h2 className="mb-4 text-lg font-bold text-(--text-primary)">
           Mis pedidos
