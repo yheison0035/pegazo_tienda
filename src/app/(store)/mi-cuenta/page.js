@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Header from "@/components/layout/header";
 import Footer from "@/components/layout/footer";
 import Container from "@/components/layout/container";
@@ -58,7 +58,7 @@ function LinkButton({ onClick, children }) {
 }
 
 function AuthPanel() {
-  const { login, register, loginWithGoogle, forgotPassword } = useCustomer();
+  const { login, register, forgotPassword } = useCustomer();
   const [mode, setMode] = useState("login"); // 'login' | 'register' | 'forgot'
   const [form, setForm] = useState({
     name: "",
@@ -148,24 +148,19 @@ function AuthPanel() {
     }
   };
 
-  const onGoogle = async (credential) => {
-    setFormError("");
-    setBusy(true);
+  // Si Google devolvió un error, mostrarlo (?gerror=1 en la URL).
+  useEffect(() => {
     try {
-      await loginWithGoogle(credential);
-    } catch (err) {
-      setFormError(err?.message || "No se pudo entrar con Google.");
-    } finally {
-      setBusy(false);
+      if (new URLSearchParams(window.location.search).get("gerror")) {
+        setFormError("No se pudo entrar con Google. Intenta de nuevo.");
+        const url = new URL(window.location.href);
+        url.searchParams.delete("gerror");
+        window.history.replaceState({}, "", url.pathname + url.search);
+      }
+    } catch {
+      /* noop */
     }
-  };
-
-  const title =
-    mode === "forgot"
-      ? "Restablecer contraseña"
-      : mode === "register"
-        ? "Crear cuenta"
-        : "Iniciar sesión";
+  }, []);
 
   return (
     <div className="mx-auto w-full max-w-md">
@@ -282,9 +277,11 @@ function AuthPanel() {
         <>
           <div className="mt-5">
             <GoogleButton
-              text={mode === "register" ? "signup_with" : "signin_with"}
-              onCredential={onGoogle}
-              onError={(m) => setFormError(m)}
+              text={
+                mode === "register"
+                  ? "Registrarme con Google"
+                  : "Continuar con Google"
+              }
             />
           </div>
           <p className="mt-5 text-center text-sm text-(--text-muted)">

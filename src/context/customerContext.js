@@ -65,12 +65,35 @@ export function CustomerProvider({ children }) {
     }
   }, []);
 
+  // Al volver del login con Google, el backend redirige con ?gtoken=<sesión> en
+  // la URL: se adopta como token y se limpia la URL.
+  const adoptGoogleToken = useCallback(() => {
+    if (typeof window === "undefined") return false;
+    try {
+      const params = new URLSearchParams(window.location.search);
+      const gtoken = params.get("gtoken");
+      if (gtoken) {
+        writeToken(gtoken);
+        params.delete("gtoken");
+        params.delete("gerror");
+        const qs = params.toString();
+        const clean = window.location.pathname + (qs ? `?${qs}` : "");
+        window.history.replaceState({}, "", clean);
+        return true;
+      }
+    } catch {
+      /* noop */
+    }
+    return false;
+  }, []);
+
   useEffect(() => {
     (async () => {
+      adoptGoogleToken();
       await refresh();
       setLoading(false);
     })();
-  }, [refresh]);
+  }, [refresh, adoptGoogleToken]);
 
   const login = useCallback(async ({ email, password }) => {
     const res = await loginCustomer({ email, password });
