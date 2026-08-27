@@ -2,11 +2,14 @@
 
 import { CartProvider } from "./cartContext";
 import { WebsiteProvider } from "./websiteContext";
+import { CustomerProvider } from "./customerContext";
 
 export default function Providers({ children, initialWebsite = null }) {
   return (
     <WebsiteProvider initialWebsite={initialWebsite}>
-      <CartProvider>{children}</CartProvider>
+      <CustomerProvider>
+        <CartProvider>{children}</CartProvider>
+      </CustomerProvider>
     </WebsiteProvider>
   );
 }

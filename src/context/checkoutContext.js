@@ -73,6 +73,18 @@ export function CheckoutProvider({ children, wompiReady = false }) {
     }));
   }
 
+  // Rellena datos del cliente logueado SOLO en los campos que estén vacíos, para
+  // no pisar lo que el usuario ya haya escrito.
+  function prefill(values = {}) {
+    setFormData((prev) => {
+      const next = { ...prev };
+      for (const [k, v] of Object.entries(values)) {
+        if (v && !String(prev[k] || "").trim()) next[k] = v;
+      }
+      return next;
+    });
+  }
+
   function isValidEmail(email) {
     return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
   }
@@ -150,6 +162,7 @@ export function CheckoutProvider({ children, wompiReady = false }) {
       value={{
         formData,
         handleChange,
+        prefill,
         deliveryMethod,
         setDeliveryMethod,
         deliveryModes: modes,

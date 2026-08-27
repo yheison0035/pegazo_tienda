@@ -1,6 +1,8 @@
 "use client";
 
+import { useEffect } from "react";
 import { useCheckout } from "@/context/checkoutContext";
+import { useCustomer } from "@/context/customerContext";
 import CheckoutBackLink from "@/components/layout/checkout/components/checkoutBackLink";
 import CheckoutContainer from "@/components/layout/checkout/components/checkoutContainer";
 import CheckoutForm from "@/components/layout/checkout/checkoutForm";
@@ -24,11 +26,27 @@ export default function CheckoutPage() {
     formData,
     deliveryMethod,
     needsAddress,
+    prefill,
   } = useCheckout();
 
   const { items, clearCart } = useCart();
+  const { customer } = useCustomer();
   const toast = useToast();
   const router = useRouter();
+
+  // Si el cliente inició sesión, rellenar sus datos en el checkout (solo campos
+  // vacíos, sin pisar lo que escriba).
+  useEffect(() => {
+    if (!customer) return;
+    const parts = String(customer.name || "").trim().split(/\s+/);
+    prefill({
+      email: customer.email || "",
+      firstName: parts[0] || "",
+      lastName: parts.slice(1).join(" ") || "",
+      phone: customer.phone || "",
+      documentNumber: customer.document || "",
+    });
+  }, [customer, prefill]);
 
   async function handleConfirm() {
     setShowConfirm(false);
