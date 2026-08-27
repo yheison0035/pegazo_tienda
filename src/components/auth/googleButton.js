@@ -3,7 +3,12 @@
 import { useEffect, useRef, useState } from "react";
 
 const GSI_SRC = "https://accounts.google.com/gsi/client";
-const CLIENT_ID = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID;
+// Client ID público de Google (OAuth). Se puede sobreescribir por env
+// NEXT_PUBLIC_GOOGLE_CLIENT_ID; el valor por defecto deja Google funcionando
+// sin configurar nada en el hosting.
+const CLIENT_ID =
+  process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID ||
+  "763872388804-5p6fncsiplu0n7iirhbg1bdvjk0dcm38.apps.googleusercontent.com";
 
 // Carga el script de Google Identity Services una sola vez.
 function loadGsi() {
