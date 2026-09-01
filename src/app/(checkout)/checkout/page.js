@@ -10,6 +10,7 @@ import CheckoutLoader from "@/components/layout/checkout/components/checkoutLoad
 import CheckoutSummary from "@/components/layout/checkout/checkoutSummary";
 import CheckoutConfirmModal from "@/components/layout/checkout/components/checkoutConfirmModal";
 import { useCart } from "@/context/cartContext";
+import { useWebsiteContext } from "@/context/websiteContext";
 import { calculateShipping } from "@/utils/shipping";
 import { openWompiCheckout } from "@/lib/wompi/wompiCheckout";
 import { createOrder } from "@/lib/utils/api/routes/checkout";
@@ -30,6 +31,8 @@ export default function CheckoutPage() {
   } = useCheckout();
 
   const { items, clearCart } = useCart();
+  const { website } = useWebsiteContext();
+  const company = website?.company;
   const { customer } = useCustomer();
   const toast = useToast();
   const router = useRouter();
@@ -63,6 +66,15 @@ export default function CheckoutPage() {
       toast.error(
         "Tu carrito está desactualizado. Vacíalo y agrega los productos de nuevo.",
       );
+      return;
+    }
+
+    // Seguridad: si eligió pago en línea pero la tienda no tiene Wompi, aborta.
+    if (
+      paymentMethod === "online" &&
+      !(company?.wompiEnabled && company?.wompiPublicKey)
+    ) {
+      toast.error("Esta tienda no tiene pagos en línea disponibles.");
       return;
     }
 
@@ -125,6 +137,7 @@ export default function CheckoutPage() {
           amount: subtotal + shippingCost,
           reference: order.orderCode,
           customerEmail: formData.email,
+          publicKey: company?.wompiPublicKey,
         });
 
         clearCart();

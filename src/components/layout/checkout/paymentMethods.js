@@ -1,18 +1,26 @@
 import { CreditCardIcon, BanknotesIcon } from "@heroicons/react/24/outline";
+import { useWebsiteContext } from "@/context/websiteContext";
 
 export default function PaymentMethods({ value, onChange }) {
+  const { website } = useWebsiteContext();
+  const company = website?.company;
+  // Pago en línea solo si el negocio conectó su cuenta Wompi.
+  const wompiReady = !!(company?.wompiEnabled && company?.wompiPublicKey);
+
   return (
     <div className="bg-(--bg-page) rounded-xl p-6 shadow-(--shadow-sm)">
       <h3 className="text-lg font-semibold mb-4">Método de pago</h3>
 
       <div className="space-y-3">
-        <Option
-          active={value === "online"}
-          onClick={() => onChange("online")}
-          icon={<CreditCardIcon className="w-6 h-6" />}
-          title="Pago en línea"
-          subtitle="Tarjeta, PSE, Nequi, Daviplata (Wompi)"
-        />
+        {wompiReady && (
+          <Option
+            active={value === "online"}
+            onClick={() => onChange("online")}
+            icon={<CreditCardIcon className="w-6 h-6" />}
+            title="Pago en línea"
+            subtitle="Tarjeta, PSE, Nequi, Daviplata (Wompi)"
+          />
+        )}
 
         <Option
           active={value === "cod"}
