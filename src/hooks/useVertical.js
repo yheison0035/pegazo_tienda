@@ -30,18 +30,36 @@ export default function useVertical() {
 
   const base = getVertical(override || baseType);
 
-  // Ajustes configurados por la plataforma para este tipo (fulfillment/layout).
-  // Mandan sobre el mapa por defecto. En vista previa (override) se respeta el
-  // vertical previsualizado, sin mezclar la config real.
+  // En vista previa (override) se respeta el vertical previsualizado tal cual,
+  // sin mezclar la configuración real del negocio.
+  if (override) return base;
+
+  // Ajustes configurados por la plataforma para este tipo. Mandan sobre el mapa
+  // por defecto: presentación/entrega (typeStorefront) y vocabulario
+  // (typeTerminology, el mismo que ve el CRM).
   const ts = website?.company?.typeStorefront;
-  if (!override && ts && typeof ts === "object") {
-    return {
-      ...base,
-      ...(Array.isArray(ts.fulfillment) && ts.fulfillment.length
-        ? { fulfillment: ts.fulfillment }
-        : {}),
-      ...(ts.layout ? { layout: ts.layout } : {}),
-    };
+  const term = website?.company?.typeTerminology;
+  const merged = { ...base };
+
+  if (ts && typeof ts === "object") {
+    if (Array.isArray(ts.fulfillment) && ts.fulfillment.length)
+      merged.fulfillment = ts.fulfillment;
+    if (ts.layout) merged.layout = ts.layout;
+    if (ts.variant) merged.variant = ts.variant;
+    if (typeof ts.showSpecs === "boolean") merged.showSpecs = ts.showSpecs;
+    if (typeof ts.warrantyBadge === "boolean")
+      merged.warrantyBadge = ts.warrantyBadge;
   }
-  return base;
+
+  if (term && typeof term === "object") {
+    if (term.product) merged.productWord = term.product;
+    if (term.productPlural) merged.productPlural = term.productPlural;
+    if (term.catalogLabel) merged.catalogLabel = term.catalogLabel;
+    if (term.sale) {
+      merged.orderWordCap = term.sale;
+      merged.orderWord = String(term.sale).toLowerCase();
+    }
+  }
+
+  return merged;
 }
