@@ -28,5 +28,20 @@ export default function useVertical() {
     return () => window.removeEventListener("vertical-preview-change", read);
   }, []);
 
-  return getVertical(override || baseType);
+  const base = getVertical(override || baseType);
+
+  // Ajustes configurados por la plataforma para este tipo (fulfillment/layout).
+  // Mandan sobre el mapa por defecto. En vista previa (override) se respeta el
+  // vertical previsualizado, sin mezclar la config real.
+  const ts = website?.company?.typeStorefront;
+  if (!override && ts && typeof ts === "object") {
+    return {
+      ...base,
+      ...(Array.isArray(ts.fulfillment) && ts.fulfillment.length
+        ? { fulfillment: ts.fulfillment }
+        : {}),
+      ...(ts.layout ? { layout: ts.layout } : {}),
+    };
+  }
+  return base;
 }
