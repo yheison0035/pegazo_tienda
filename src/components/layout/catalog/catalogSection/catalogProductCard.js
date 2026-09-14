@@ -127,7 +127,7 @@ export default function CatalogProductCard({ product, category }) {
   // prominente con % de descuento, título liviano y una acción clara. Colores
   // 100% del tema del dueño.
   return (
-    <article className="group flex flex-col overflow-hidden rounded-lg border border-(--border-soft) bg-(--bg-page) transition-all duration-200 hover:-translate-y-0.5 hover:border-(--border-strong) hover:shadow-(--shadow-lg)">
+    <article className="group flex flex-col overflow-hidden rounded-lg border border-(--border-soft) bg-(--bg-page) shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:border-(--border-strong) hover:shadow-(--shadow-lg)">
       {/* Imagen con galería en hover (cambiar fotos sin salir de la lista).
           La imagen va en ABSOLUTO dentro del cuadro cuadrado: el tamaño de la
           card no depende de la foto, así no "salta" al cambiar de imagen. */}

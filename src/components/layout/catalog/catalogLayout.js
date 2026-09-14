@@ -30,25 +30,28 @@ export default function CatalogLayout({ category, initialCatalog = null }) {
   const catalog = useCatalog(catalogParams, initialCatalog);
 
   return (
-    <section className="grid grid-cols-1 lg:grid-cols-[260px_1fr] gap-8 md:pt-5">
-      <aside
-        className="
-          hidden lg:block
-          sticky
-          top-[calc(var(--header-nav-height)+16px)]
-          self-start
-          transition-[top]
-          duration-200
-  "
-      >
-        {catalog.filters ? (
-          <FiltersSidebar filters={catalog.filters} />
-        ) : (
-          <FiltersSidebarSkeleton />
-        )}
-      </aside>
+    <div className="mt-4 rounded-lg border border-(--border-soft) bg-(--bg-page) p-4 md:mt-5 md:p-6">
+      <section className="grid grid-cols-1 gap-6 lg:grid-cols-[240px_1fr] lg:gap-8">
+        <aside
+          className="
+            hidden lg:block
+            sticky
+            top-[calc(var(--header-nav-height)+16px)]
+            self-start
+            transition-[top]
+            duration-200
+            lg:border-r lg:border-(--border-soft) lg:pr-6
+          "
+        >
+          {catalog.filters ? (
+            <FiltersSidebar filters={catalog.filters} />
+          ) : (
+            <FiltersSidebarSkeleton />
+          )}
+        </aside>
 
-      <ProductsSection category={category} catalog={catalog} />
-    </section>
+        <ProductsSection category={category} catalog={catalog} />
+      </section>
+    </div>
   );
 }

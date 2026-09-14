@@ -8,7 +8,7 @@ export default function FiltersSidebar({ filters }) {
   if (!filters) return null;
 
   return (
-    <aside className="rounded-lg border border-(--border-soft) bg-(--bg-page) p-4">
+    <div>
       <h3 className="mb-4 text-base font-semibold text-(--text-primary)">
         Filtrar por
       </h3>
@@ -79,7 +79,7 @@ export default function FiltersSidebar({ filters }) {
           />
         </div>
       </Group>
-    </aside>
+    </div>
   );
 }
 
