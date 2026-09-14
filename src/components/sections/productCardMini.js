@@ -7,11 +7,6 @@ import { slugifyCategory } from "@/utils/slugify";
 export default function ProductCardMini({ product }) {
   if (!product) return null;
 
-  const savings =
-    product.oldPrice && product.oldPrice > product.price
-      ? product.oldPrice - product.price
-      : 0;
-
   return (
     <Link
       href={`/${slugifyCategory(product.category)}/${product.slug}`}
@@ -31,20 +26,22 @@ export default function ProductCardMini({ product }) {
         </div>
 
         <div className="flex flex-1 flex-col gap-1 p-3">
-          {/* Precio: Antes (tachado) y Ahora (grande) + ahorro */}
+          {/* Precio: anterior tachado + precio + % OFF (igual que el catálogo) */}
           {product.oldPrice && product.oldPrice > product.price && (
             <span className="text-xs text-(--text-muted) line-through">
-              Antes ${product.oldPrice.toLocaleString()}
+              ${product.oldPrice.toLocaleString()}
             </span>
           )}
-          <span className="text-lg font-bold text-(--text-primary)">
-            ${product.price.toLocaleString()}
-          </span>
-          {savings > 0 && (
-            <span className="text-xs font-semibold text-(--success)">
-              Ahorras ${savings.toLocaleString()}
+          <div className="flex items-center gap-2">
+            <span className="text-lg font-bold text-(--text-primary)">
+              ${product.price.toLocaleString()}
             </span>
-          )}
+            {product.discount > 0 && (
+              <span className="rounded bg-(--success) px-1.5 py-0.5 text-[11px] font-bold text-white">
+                {product.discount}% OFF
+              </span>
+            )}
+          </div>
 
           <p className="mt-0.5 line-clamp-2 min-h-9 text-sm text-(--text-secondary) transition group-hover:text-(--brand-accent)">
             {product.name}

@@ -113,14 +113,21 @@ export default function ListProductHeader({
                   </p>
 
                   <div className="mt-2 flex flex-col leading-tight">
-                    {product.oldPrice && (
+                    {product.oldPrice && product.oldPrice > product.price && (
                       <span className="text-xs text-(--text-muted) line-through">
                         ${product.oldPrice.toLocaleString()}
                       </span>
                     )}
-                    <span className="text-lg font-bold text-(--cta-primary)">
-                      ${product.price.toLocaleString()}
-                    </span>
+                    <div className="flex items-center gap-2">
+                      <span className="text-lg font-bold text-(--text-primary)">
+                        ${product.price.toLocaleString()}
+                      </span>
+                      {product.discount > 0 && (
+                        <span className="rounded bg-(--success) px-1.5 py-0.5 text-[11px] font-bold text-white">
+                          {product.discount}% OFF
+                        </span>
+                      )}
+                    </div>
                   </div>
 
                   <p

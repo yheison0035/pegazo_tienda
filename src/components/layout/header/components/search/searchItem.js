@@ -89,16 +89,22 @@ export default function SearchItem({ product }) {
           </h3>
         </Link>
 
-        <div className="flex items-center gap-2 mt-1">
-          {product.oldPrice && (
-            <span className="text-sm line-through text-(--text-muted)">
+        <div className="mt-1 flex flex-col">
+          {product.oldPrice && product.oldPrice > product.price && (
+            <span className="text-xs line-through text-(--text-muted)">
               ${product.oldPrice.toLocaleString()}
             </span>
           )}
-
-          <span className="text-lg font-bold text-(--cta-primary)">
-            ${product.price.toLocaleString()}
-          </span>
+          <div className="flex items-center gap-2">
+            <span className="text-lg font-bold text-(--text-primary)">
+              ${product.price.toLocaleString()}
+            </span>
+            {product.discount > 0 && (
+              <span className="rounded bg-(--success) px-1.5 py-0.5 text-xs font-bold text-white">
+                {product.discount}% OFF
+              </span>
+            )}
+          </div>
         </div>
 
         {hasColors && (
