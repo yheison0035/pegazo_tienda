@@ -70,18 +70,10 @@ export default function CheckoutPage() {
       return;
     }
 
-    // Si eligió pago en línea pero la pasarela aún no está lista, mostramos un
-    // mensaje AMABLE (no técnico) y sugerimos otra opción, en vez de exponer que
-    // la tienda no está configurada.
-    if (
-      paymentMethod === "online" &&
-      !(company?.wompiEnabled && company?.wompiPublicKey)
-    ) {
-      toast.error(
-        "Lo sentimos, tuvimos un problema con el pago en línea. No es culpa tuya. Intenta de nuevo más tarde o elige otro método de pago.",
-      );
-      return;
-    }
+    // Nota: NO validamos aquí si la pasarela está lista con datos del navegador
+    // (pueden estar cacheados y dar un falso negativo). La verdad la tiene el
+    // servidor: al pedir la firma, si la tienda no tiene pagos en línea, responde
+    // con error y se muestra el mensaje amable del catch.
 
     setIsSubmitting(true);
 
@@ -160,7 +152,7 @@ export default function CheckoutPage() {
       // mensaje amable en vez de un error técnico que asuste al cliente.
       const raw = String(error?.message || "");
       const isUserFacing =
-        /stock|inventario|disponib|carrito|dato|correo|teléfono|telefono|dirección|direccion/i.test(
+        /stock|inventario|disponib|carrito|dato|correo|teléfono|telefono|dirección|direccion|pago|línea|linea|método|metodo/i.test(
           raw,
         );
       toast.error(

@@ -31,18 +31,19 @@ export async function openWompiCheckout({
   );
 
   if (!res.ok) {
-    const err = await res.json().catch(() => ({}));
     throw new Error(
-      err?.message ||
-        "Esta tienda aún no tiene pagos en línea configurados.",
+      "No pudimos iniciar el pago en línea en este momento. Intenta de nuevo más tarde o elige otro método de pago.",
     );
   }
 
-  const { signature } = await res.json();
+  const data = await res.json();
+  const { signature } = data;
 
-  // Llave pública de la empresa (viene del config de la tienda); si no llega,
-  // se cae a la global por compatibilidad.
-  const pubKey = publicKey || process.env.NEXT_PUBLIC_WOMPI_PUBLIC_KEY;
+  // Llave pública AUTORITATIVA desde el servidor (no depende de datos cacheados
+  // en el navegador). Si por compatibilidad no llegara, usa la del config o la
+  // global.
+  const pubKey =
+    data.publicKey || publicKey || process.env.NEXT_PUBLIC_WOMPI_PUBLIC_KEY;
 
   const url =
     `https://checkout.wompi.co/p/?` +
