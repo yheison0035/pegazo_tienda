@@ -297,6 +297,89 @@ export default function TrackOrder() {
                 </div>
               )}
 
+              {/* Pago y envío: desglose y cuánto debe pagar */}
+              <div className="rounded-2xl border border-(--border-soft) p-4">
+                <p className="mb-3 text-xs uppercase tracking-wide text-(--text-muted)">
+                  Pago y envío
+                </p>
+
+                <div className="mb-3 flex flex-wrap items-center gap-2 text-sm">
+                  {result.deliveryType && (
+                    <span className="rounded-full bg-(--bg-muted) px-2.5 py-1 font-medium text-(--text-primary)">
+                      {result.deliveryType}
+                    </span>
+                  )}
+                  {result.paymentMethodLabel && (
+                    <span className="rounded-full bg-(--bg-muted) px-2.5 py-1 font-medium text-(--text-primary)">
+                      {result.paymentMethodLabel}
+                    </span>
+                  )}
+                  {result.paymentStatusLabel && (
+                    <span
+                      className={`rounded-full px-2.5 py-1 font-semibold ${
+                        result.paid
+                          ? "bg-(--success)/15 text-(--success)"
+                          : "bg-(--warning)/15 text-(--warning)"
+                      }`}
+                    >
+                      {result.paymentStatusLabel}
+                    </span>
+                  )}
+                </div>
+
+                <div className="space-y-1.5 text-sm">
+                  {result.subtotal != null && (
+                    <div className="flex justify-between text-(--text-secondary)">
+                      <span>Subtotal</span>
+                      <span>{money(result.subtotal)}</span>
+                    </div>
+                  )}
+                  {result.shippingCost != null && (
+                    <div className="flex justify-between text-(--text-secondary)">
+                      <span>Envío</span>
+                      <span
+                        className={
+                          result.shippingCost === 0 ? "text-(--success)" : ""
+                        }
+                      >
+                        {result.shippingCost === 0
+                          ? "Gratis"
+                          : money(result.shippingCost)}
+                      </span>
+                    </div>
+                  )}
+                  <div className="flex justify-between border-t border-(--border-soft) pt-1.5 font-semibold text-(--text-primary)">
+                    <span>Total</span>
+                    <span>{money(result.total)}</span>
+                  </div>
+                </div>
+
+                {/* Cuánto debe pagar */}
+                {result.amountToPay > 0 ? (
+                  <div className="mt-3 flex items-center justify-between rounded-xl bg-(--cta-primary)/10 px-3 py-2.5">
+                    <span className="text-sm font-medium text-(--text-primary)">
+                      Debes pagar al recibir
+                    </span>
+                    <span className="text-lg font-bold text-(--cta-primary)">
+                      {money(result.amountToPay)}
+                    </span>
+                  </div>
+                ) : (
+                  <div className="mt-3 rounded-xl bg-(--success)/10 px-3 py-2.5 text-center text-sm font-semibold text-(--success)">
+                    ✓ Este pedido ya está pagado
+                  </div>
+                )}
+
+                {result.address && (
+                  <p className="mt-3 text-xs text-(--text-muted)">
+                    <span className="font-medium text-(--text-secondary)">
+                      Dirección:
+                    </span>{" "}
+                    {result.address}
+                  </p>
+                )}
+              </div>
+
               {/* Datos de envío */}
               {(result.carrier || result.trackingNumber) && (
                 <div className="grid grid-cols-2 gap-3 rounded-2xl border border-(--border-soft) p-4 text-sm">
@@ -351,12 +434,6 @@ export default function TrackOrder() {
                     </li>
                   ))}
                 </ul>
-                <div className="mt-3 flex justify-between border-t border-(--border-soft) pt-3 font-semibold">
-                  <span>Total</span>
-                  <span className="text-(--cta-primary)">
-                    {money(result.total)}
-                  </span>
-                </div>
               </div>
             </div>
           )}
