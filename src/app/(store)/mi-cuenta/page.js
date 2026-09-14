@@ -12,6 +12,12 @@ import {
   validators,
 } from "@/components/auth/authFields";
 import GoogleButton from "@/components/auth/googleButton";
+import {
+  UserCircleIcon,
+  ShoppingBagIcon,
+  ArrowRightStartOnRectangleIcon,
+  IdentificationIcon,
+} from "@heroicons/react/24/outline";
 
 const money = (n) =>
   new Intl.NumberFormat("es-CO", {
@@ -23,11 +29,35 @@ const money = (n) =>
 const ORDER_STATUS = {
   NUEVA: "Nuevo",
   EN_PROCESO: "En proceso",
+  PENDIENTE: "Pendiente",
+  APROBADA: "Aprobado",
   COMPLETADA: "Completado",
+  DESPACHADA: "Despachado",
+  ENTREGADA: "Entregado",
   CANCELADA: "Cancelado",
   RECHAZADA: "Rechazado",
   DEVUELTA: "Devuelto",
 };
+
+// Color del estado del pedido (tinte suave, legible en claro/oscuro).
+const STATUS_STYLE = {
+  NUEVA: "bg-(--brand-accent)/15 text-(--brand-accent)",
+  EN_PROCESO: "bg-(--brand-accent)/15 text-(--brand-accent)",
+  PENDIENTE: "bg-(--warning)/15 text-(--warning)",
+  APROBADA: "bg-(--success)/15 text-(--success)",
+  COMPLETADA: "bg-(--success)/15 text-(--success)",
+  DESPACHADA: "bg-(--brand-accent)/15 text-(--brand-accent)",
+  ENTREGADA: "bg-(--success)/15 text-(--success)",
+  CANCELADA: "bg-(--danger)/15 text-(--danger)",
+  RECHAZADA: "bg-(--danger)/15 text-(--danger)",
+  DEVUELTA: "bg-(--danger)/15 text-(--danger)",
+};
+
+function initials(name) {
+  const parts = String(name || "").trim().split(/\s+/).filter(Boolean);
+  if (!parts.length) return "";
+  return (parts[0][0] + (parts[1]?.[0] || "")).toUpperCase();
+}
 
 function TabButton({ active, onClick, children }) {
   return (
@@ -345,101 +375,151 @@ function AccountPanel() {
   };
 
   return (
-    <div className="mx-auto grid w-full max-w-4xl gap-8 md:grid-cols-2">
-      <section>
-        <div className="mb-4 flex items-center justify-between">
-          <h2 className="text-lg font-bold text-(--text-primary)">Mis datos</h2>
-          <button
-            type="button"
-            onClick={logout}
-            className="cursor-pointer text-sm font-medium text-(--text-muted) hover:text-(--brand-accent)"
-          >
-            Cerrar sesión
-          </button>
-        </div>
-        <form onSubmit={save} noValidate className="space-y-4">
-          <TextField
-            label="Nombre completo"
-            type="text"
-            value={form.name}
-            onChange={set("name")}
-            error={errors.name}
-          />
-          <TextField
-            label="Correo electrónico"
-            type="email"
-            value={customer?.email || ""}
-            disabled
-            readOnly
-            className="cursor-not-allowed opacity-70"
-          />
-          <TextField
-            label="Teléfono"
-            type="tel"
-            inputMode="numeric"
-            value={form.phone}
-            onChange={set("phone")}
-            error={errors.phone}
-          />
-          <TextField
-            label="Documento"
-            type="text"
-            value={form.documentNumber}
-            onChange={set("documentNumber")}
-          />
-          {msg && (
-            <p className="rounded-lg bg-(--bg-soft) px-3 py-2 text-sm text-(--text-primary)">
-              {msg}
+    <div className="mx-auto w-full max-w-5xl space-y-6">
+      {/* Cabecera de perfil */}
+      <div className="flex flex-col gap-4 overflow-hidden rounded-2xl bg-gradient-to-br from-(--brand-primary) to-(--brand-secondary) p-6 text-(--text-inverted) shadow-sm sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex items-center gap-4">
+          <span className="flex h-16 w-16 flex-none items-center justify-center rounded-full bg-white/15 text-2xl font-bold ring-2 ring-white/30">
+            {initials(customer?.name) || (
+              <UserCircleIcon className="h-9 w-9" />
+            )}
+          </span>
+          <div className="min-w-0">
+            <p className="truncate text-xl font-bold">
+              {customer?.name || "Mi cuenta"}
             </p>
-          )}
-          <button
-            type="submit"
-            disabled={busy}
-            className="cursor-pointer rounded-xl bg-(--cta-primary) px-5 py-2.5 font-semibold text-white transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-60"
-          >
-            {busy ? "Guardando…" : "Guardar cambios"}
-          </button>
-        </form>
-      </section>
+            <p className="truncate text-sm opacity-90">{customer?.email}</p>
+            <span className="mt-1 inline-flex items-center gap-1 rounded-full bg-white/15 px-2.5 py-0.5 text-xs font-medium">
+              {orders.length}{" "}
+              {orders.length === 1 ? "pedido" : "pedidos"}
+            </span>
+          </div>
+        </div>
+        <button
+          type="button"
+          onClick={logout}
+          className="inline-flex w-fit items-center gap-2 rounded-xl bg-white/15 px-4 py-2 text-sm font-medium transition hover:bg-white/25"
+        >
+          <ArrowRightStartOnRectangleIcon className="h-5 w-5" />
+          Cerrar sesión
+        </button>
+      </div>
 
-      <section>
-        <h2 className="mb-4 text-lg font-bold text-(--text-primary)">
-          Mis pedidos
-        </h2>
-        {orders.length === 0 ? (
-          <p className="rounded-xl border border-(--border-soft) bg-(--bg-soft) p-4 text-sm text-(--text-muted)">
-            Todavía no tienes pedidos.
-          </p>
-        ) : (
-          <ul className="space-y-3">
-            {orders.map((o) => (
-              <li
-                key={o.id}
-                className="rounded-xl border border-(--border-soft) p-4"
+      <div className="grid gap-6 lg:grid-cols-5">
+        {/* Mis datos */}
+        <section className="rounded-2xl border border-(--border-soft) bg-(--bg-page) p-6 shadow-sm lg:col-span-2">
+          <div className="mb-5 flex items-center gap-2">
+            <IdentificationIcon className="h-5 w-5 text-(--brand-accent)" />
+            <h2 className="text-lg font-bold text-(--text-primary)">
+              Mis datos
+            </h2>
+          </div>
+          <form onSubmit={save} noValidate className="space-y-4">
+            <TextField
+              label="Nombre completo"
+              type="text"
+              value={form.name}
+              onChange={set("name")}
+              error={errors.name}
+            />
+            <TextField
+              label="Correo electrónico"
+              type="email"
+              value={customer?.email || ""}
+              disabled
+              readOnly
+              className="cursor-not-allowed opacity-70"
+            />
+            <TextField
+              label="Teléfono"
+              type="tel"
+              inputMode="numeric"
+              value={form.phone}
+              onChange={set("phone")}
+              error={errors.phone}
+            />
+            <TextField
+              label="Documento"
+              type="text"
+              value={form.documentNumber}
+              onChange={set("documentNumber")}
+            />
+            {msg && (
+              <p className="rounded-lg bg-(--bg-soft) px-3 py-2 text-sm text-(--text-primary)">
+                {msg}
+              </p>
+            )}
+            <button
+              type="submit"
+              disabled={busy}
+              className="w-full cursor-pointer rounded-xl bg-(--cta-primary) px-5 py-3 font-semibold text-(--text-inverted) transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-60"
+            >
+              {busy ? "Guardando…" : "Guardar cambios"}
+            </button>
+          </form>
+        </section>
+
+        {/* Mis pedidos */}
+        <section className="rounded-2xl border border-(--border-soft) bg-(--bg-page) p-6 shadow-sm lg:col-span-3">
+          <div className="mb-5 flex items-center gap-2">
+            <ShoppingBagIcon className="h-5 w-5 text-(--brand-accent)" />
+            <h2 className="text-lg font-bold text-(--text-primary)">
+              Mis pedidos
+            </h2>
+          </div>
+          {orders.length === 0 ? (
+            <div className="flex flex-col items-center gap-3 rounded-xl border border-dashed border-(--border-soft) bg-(--bg-soft) px-4 py-12 text-center">
+              <ShoppingBagIcon className="h-10 w-10 text-(--text-muted)" />
+              <p className="text-sm text-(--text-muted)">
+                Todavía no tienes pedidos.
+              </p>
+              <a
+                href="/"
+                className="rounded-lg bg-(--cta-primary) px-4 py-2 text-sm font-semibold text-(--text-inverted) transition hover:opacity-90"
               >
-                <div className="flex items-center justify-between gap-2">
-                  <span className="font-semibold text-(--text-primary)">
-                    {o.code}
-                  </span>
-                  <span className="font-bold text-(--brand-accent)">
-                    {money(o.totalAmount)}
-                  </span>
-                </div>
-                <div className="mt-1 flex items-center justify-between text-xs text-(--text-muted)">
-                  <span>
-                    {o.saleDate
-                      ? new Date(o.saleDate).toLocaleDateString("es-CO")
-                      : ""}
-                  </span>
-                  <span className="rounded-full bg-(--bg-soft) px-2 py-0.5 font-medium">
-                    {ORDER_STATUS[o.saleStatus] || o.saleStatus}
-                  </span>
-                </div>
-              </li>
-            ))}
-          </ul>
-        )}
-      </section>
+                Empezar a comprar
+              </a>
+            </div>
+          ) : (
+            <ul className="space-y-3">
+              {orders.map((o) => (
+                <li
+                  key={o.id}
+                  className="rounded-xl border border-(--border-soft) p-4 transition hover:border-(--border-strong) hover:shadow-sm"
+                >
+                  <div className="flex items-center justify-between gap-2">
+                    <span className="font-semibold text-(--text-primary)">
+                      {o.code}
+                    </span>
+                    <span
+                      className={`rounded-full px-2.5 py-0.5 text-xs font-semibold ${
+                        STATUS_STYLE[o.saleStatus] ||
+                        "bg-(--bg-soft) text-(--text-muted)"
+                      }`}
+                    >
+                      {ORDER_STATUS[o.saleStatus] || o.saleStatus}
+                    </span>
+                  </div>
+                  <div className="mt-2 flex items-center justify-between">
+                    <span className="text-xs text-(--text-muted)">
+                      {o.saleDate
+                        ? new Date(o.saleDate).toLocaleDateString("es-CO", {
+                            day: "2-digit",
+                            month: "short",
+                            year: "numeric",
+                          })
+                        : ""}
+                    </span>
+                    <span className="font-bold text-(--text-primary)">
+                      {money(o.totalAmount)}
+                    </span>
+                  </div>
+                </li>
+              ))}
+            </ul>
+          )}
+        </section>
+      </div>
     </div>
   );
 }
@@ -452,15 +532,24 @@ export default function MiCuentaPage() {
       <Header />
       <Container>
         <main className="px-4 pb-16 md:pt-49 pt-70">
-          <h1 className="mb-8 text-center text-3xl font-bold text-(--text-primary)">
-            Mi cuenta
-          </h1>
           {loading ? (
             <p className="py-16 text-center text-(--text-muted)">Cargando…</p>
           ) : isAuthenticated ? (
             <AccountPanel />
           ) : (
-            <AuthPanel />
+            <div className="mx-auto w-full max-w-md">
+              <div className="mb-6 text-center">
+                <h1 className="text-3xl font-bold text-(--text-primary)">
+                  Mi cuenta
+                </h1>
+                <p className="mt-1 text-sm text-(--text-muted)">
+                  Inicia sesión para ver tus pedidos y datos.
+                </p>
+              </div>
+              <div className="rounded-2xl border border-(--border-soft) bg-(--bg-page) p-6 shadow-sm sm:p-8">
+                <AuthPanel />
+              </div>
+            </div>
           )}
         </main>
       </Container>

@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { UserIcon as UserOutlineIcon } from "@heroicons/react/24/outline";
 import { useCustomer } from "@/context/customerContext";
 
@@ -12,13 +13,20 @@ function initials(name) {
 
 export default function UserIcon() {
   const { customer, isAuthenticated } = useCustomer();
+  const pathname = usePathname();
+  const active = pathname?.startsWith("/mi-cuenta");
 
   return (
     <Link
       href="/mi-cuenta"
       aria-label={isAuthenticated ? "Mi cuenta" : "Iniciar sesión"}
       title={isAuthenticated ? "Mi cuenta" : "Iniciar sesión"}
-      className="group flex items-center gap-2 rounded-full p-2 text-(--text-primary) transition hover:bg-(--brand-accent)/10 hover:text-(--brand-accent)"
+      aria-current={active ? "page" : undefined}
+      className={`group flex items-center gap-2 rounded-full p-2 transition ${
+        active
+          ? "bg-(--brand-accent)/15 text-(--brand-accent)"
+          : "text-(--text-primary) hover:bg-(--brand-accent)/10 hover:text-(--brand-accent)"
+      }`}
     >
       {isAuthenticated ? (
         <span
