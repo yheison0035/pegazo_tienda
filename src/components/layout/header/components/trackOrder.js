@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import {
   XMarkIcon,
@@ -58,8 +58,35 @@ export default function TrackOrder() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [result, setResult] = useState(null);
+  // Guarda la última consulta exitosa para refrescar el estado en tiempo real.
+  const pollRef = useRef(null);
 
   useEffect(() => setMounted(true), []);
+
+  // Tiempo real: mientras hay un pedido en pantalla, re-consulta su estado en
+  // silencio (cada 20s y al volver a la pestaña) para reflejar cambios del CRM.
+  useEffect(() => {
+    if (!open || !result || !pollRef.current) return;
+    let alive = true;
+    const refetch = async () => {
+      try {
+        const res = await trackOrder(pollRef.current);
+        if (alive && res?.data) setResult(res.data);
+      } catch {
+        /* silencioso: no molestar al cliente por un refresco fallido */
+      }
+    };
+    const id = setInterval(refetch, 20000);
+    const onVis = () => {
+      if (window.document.visibilityState === "visible") refetch();
+    };
+    window.document.addEventListener("visibilitychange", onVis);
+    return () => {
+      alive = false;
+      clearInterval(id);
+      window.document.removeEventListener("visibilitychange", onVis);
+    };
+  }, [open, result?.code]);
 
   // Bloquea el scroll del fondo mientras el modal está abierto.
   useEffect(() => {
@@ -77,6 +104,7 @@ export default function TrackOrder() {
 
   const close = () => {
     setOpen(false);
+    pollRef.current = null;
     setTimeout(() => {
       setResult(null);
       setError("");
@@ -95,7 +123,9 @@ export default function TrackOrder() {
     }
     setLoading(true);
     try {
-      const res = await trackOrder({ ref: ref.trim(), document: document.trim() });
+      const query = { ref: ref.trim(), document: document.trim() };
+      const res = await trackOrder(query);
+      pollRef.current = query; // habilita el refresco en tiempo real
       setResult(res.data);
     } catch (err) {
       setError(err.message || "No pudimos consultar tu pedido.");
@@ -112,16 +142,17 @@ export default function TrackOrder() {
 
   const modal = (
     <div
-      className="to-overlay fixed inset-0 z-[9999] flex items-end justify-center bg-black/60 p-0 backdrop-blur-sm sm:items-center sm:p-6"
+      className="to-overlay fixed inset-0 z-[9999] overflow-y-auto bg-black/60 backdrop-blur-sm"
       onClick={close}
       role="dialog"
       aria-modal="true"
     >
-      <div
-        onClick={(e) => e.stopPropagation()}
-        className="to-pop relative flex max-h-[90vh] w-full max-w-lg flex-col overflow-hidden rounded-t-3xl bg-(--bg-page) shadow-2xl ring-1 ring-black/5 sm:rounded-3xl"
-      >
-        {/* Cabecera */}
+      <div className="flex min-h-full items-end justify-center p-0 sm:items-center sm:p-6">
+        <div
+          onClick={(e) => e.stopPropagation()}
+          className="to-pop relative w-full max-w-lg overflow-hidden rounded-t-3xl bg-(--bg-page) shadow-2xl ring-1 ring-black/5 sm:rounded-3xl"
+        >
+          {/* Cabecera */}
         <div className="relative shrink-0 overflow-hidden bg-gradient-to-br from-(--brand-primary) to-(--brand-secondary) px-6 pb-6 pt-5 text-(--text-inverted)">
           {/* Barra 'carretera' animada al pie de la cabecera */}
           <div className="to-road pointer-events-none absolute inset-x-0 bottom-0 h-1 opacity-60" />
@@ -147,8 +178,8 @@ export default function TrackOrder() {
           </div>
         </div>
 
-        {/* Cuerpo (scroll interno) */}
-        <div className="min-h-0 flex-1 overflow-y-auto px-6 py-6">
+          {/* Cuerpo */}
+          <div className="px-6 py-6">
           {!result ? (
             <form onSubmit={submit} className="space-y-4">
               <div className="flex items-start gap-2 rounded-xl bg-(--bg-soft) p-3 text-sm text-(--text-secondary)">
@@ -222,6 +253,7 @@ export default function TrackOrder() {
                 </div>
                 <button
                   onClick={() => {
+                    pollRef.current = null;
                     setResult(null);
                     setError("");
                   }}
@@ -437,6 +469,7 @@ export default function TrackOrder() {
               </div>
             </div>
           )}
+          </div>
         </div>
       </div>
 
