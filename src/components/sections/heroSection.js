@@ -50,35 +50,35 @@ export default function HeroSection() {
 
     return (
       <section className="relative w-full overflow-hidden bg-(--bg-muted)">
-        {/* Banda a todo el ancho. En MÓVIL es más alta y la imagen LLENA la banda
-            (object-cover) para que se vea bien ajustada; en desktop se mantiene la
-            imagen completa (object-contain) sobre el fondo desenfocado. */}
+        {/* La banda se ADAPTA a la imagen: ancho completo y alto automático según
+            su proporción, así se ve completa (sin recortar) y ocupa todo el ancho
+            tanto en desktop como en móvil. */}
         <div
-          className="relative h-52 w-full sm:h-64 md:h-[26rem] lg:h-[30rem] xl:h-[34rem]"
+          className="relative w-full"
           onTouchStart={onTouchStart}
           onTouchEnd={onTouchEnd}
           style={{ touchAction: "pan-y" }}
         >
-          {/* Fondo desenfocado (solo aporta en desktop, detrás de object-contain). */}
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
-            src={banner.image}
-            alt=""
-            aria-hidden="true"
-            className="absolute inset-0 hidden h-full w-full scale-110 object-cover blur-2xl md:block"
-          />
-          <div className="absolute inset-0 hidden bg-black/10 md:block" />
-
-          {/* Imagen: en móvil llena (cover); en desktop completa (contain). */}
+          {/* Imagen del banner: se adapta a la pantalla. */}
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
             src={banner.image}
             alt={banner.title || getCompanyName(website)}
-            className="absolute inset-0 z-10 h-full w-full object-cover md:object-contain"
+            className="block h-auto w-full"
           />
 
+          {/* Enlace de TODO el banner (si el dueño configuró un destino). Va por
+              debajo de flechas/puntos para no interferir con ellos. */}
+          {banner.buttonUrl && (
+            <Link
+              href={banner.buttonUrl}
+              aria-label={banner.title || "Ver más"}
+              className="absolute inset-0 z-10"
+            />
+          )}
+
           {(banner.title || banner.subtitle || banner.buttonText) && (
-            <div className="absolute inset-0 z-20 flex flex-col justify-center gap-1.5 bg-gradient-to-r from-black/60 via-black/20 to-transparent px-4 sm:gap-3 sm:px-8 md:px-16">
+            <div className="pointer-events-none absolute inset-0 z-20 flex flex-col justify-center gap-1.5 bg-gradient-to-r from-black/60 via-black/20 to-transparent px-4 sm:gap-3 sm:px-8 md:px-16">
               {banner.title && (
                 <h2 className="max-w-[16rem] text-base font-bold leading-tight text-(--text-inverted) drop-shadow sm:max-w-xl sm:text-2xl md:text-4xl">
                   {banner.title}
@@ -89,13 +89,10 @@ export default function HeroSection() {
                   {banner.subtitle}
                 </p>
               )}
-              {banner.buttonText && banner.buttonUrl && (
-                <Link
-                  href={banner.buttonUrl}
-                  className="w-fit rounded-(--radius-md) bg-(--cta-primary) px-3 py-1.5 text-xs font-medium text-(--text-inverted) transition hover:opacity-90 sm:px-5 sm:py-2.5 sm:text-sm"
-                >
+              {banner.buttonText && (
+                <span className="w-fit rounded-(--radius-md) bg-(--cta-primary) px-3 py-1.5 text-xs font-medium text-(--text-inverted) sm:px-5 sm:py-2.5 sm:text-sm">
                   {banner.buttonText}
-                </Link>
+                </span>
               )}
             </div>
           )}
