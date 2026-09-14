@@ -2,14 +2,13 @@ import { CreditCardIcon, BanknotesIcon } from "@heroicons/react/24/outline";
 import { useWebsiteContext } from "@/context/websiteContext";
 
 // Los métodos de pago que se muestran los decide el DUEÑO desde el CRM
-// (company.storePaymentMethods: ['COD','ONLINE','ADDI']). Si está vacío, se usa
-// el comportamiento legado (contra entrega + pago en línea) para no afectar las
-// tiendas ya activas.
+// (company.storePaymentMethods: ['COD','ONLINE','ADDI']) — es la ÚNICA fuente de
+// verdad: lo que active aparece, lo que desactive no. Si está vacío (tienda sin
+// configurar aún) se muestran ambos por defecto para no dejarla sin pagos.
 //
-// IMPORTANTE: el "Pago en línea" SIEMPRE se ofrece al cliente (aunque el dueño
-// aún no haya conectado su pasarela), para que la tienda se vea completa. Si el
-// cliente lo elige y la pasarela no está lista, el checkout mostrará un mensaje
-// amable ("tuvimos un problema interno, inténtalo más tarde") en vez de fallar.
+// Nota: el "Pago en línea" se muestra si está activo aunque el dueño no haya
+// terminado de conectar Wompi; si el cliente lo elige y la pasarela no está
+// lista, el checkout muestra un mensaje amable en vez de fallar.
 export default function PaymentMethods({ value, onChange }) {
   const { website } = useWebsiteContext();
   const company = website?.company;
