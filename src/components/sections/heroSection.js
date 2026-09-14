@@ -38,26 +38,26 @@ export default function HeroSection() {
 
     return (
       <section className="relative w-full overflow-hidden bg-(--bg-muted)">
-        {/* Banda de altura controlada, a todo el ancho (tamaño promedio de
-            tiendas grandes: ~480-540px en desktop). */}
-        <div className="relative h-56 w-full sm:h-72 md:h-[26rem] lg:h-[30rem] xl:h-[34rem]">
-          {/* Fondo desenfocado (rellena la banda sin barras vacías). */}
+        {/* Banda a todo el ancho. En MÓVIL es más baja y la imagen LLENA la banda
+            (object-cover) para que se vea bien ajustada; en desktop se mantiene la
+            imagen completa (object-contain) sobre el fondo desenfocado. */}
+        <div className="relative h-40 w-full sm:h-56 md:h-[26rem] lg:h-[30rem] xl:h-[34rem]">
+          {/* Fondo desenfocado (solo aporta en desktop, detrás de object-contain). */}
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
             src={banner.image}
             alt=""
             aria-hidden="true"
-            className="absolute inset-0 h-full w-full scale-110 object-cover blur-2xl"
+            className="absolute inset-0 hidden h-full w-full scale-110 object-cover blur-2xl md:block"
           />
-          <div className="absolute inset-0 bg-black/10" />
+          <div className="absolute inset-0 hidden bg-black/10 md:block" />
 
-          {/* Imagen COMPLETA (sin recortar), ajustada a la banda en cualquier
-              pantalla (object-contain rellena con el fondo desenfocado). */}
+          {/* Imagen: en móvil llena (cover); en desktop completa (contain). */}
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
             src={banner.image}
             alt={banner.title || getCompanyName(website)}
-            className="absolute inset-0 z-10 h-full w-full object-contain"
+            className="absolute inset-0 z-10 h-full w-full object-cover md:object-contain"
           />
 
           {(banner.title || banner.subtitle || banner.buttonText) && (
