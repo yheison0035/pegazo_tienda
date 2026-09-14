@@ -28,7 +28,7 @@ export default function ProductsSection({ category, catalog }) {
   const isMenu = v.layout === "menu";
   const gridClass = isMenu
     ? "grid grid-cols-1 lg:grid-cols-2 gap-4"
-    : "grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-5";
+    : "grid grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4 gap-4 sm:gap-5";
 
   const sentinelRef = useRef(null);
   const observerRef = useRef(null);

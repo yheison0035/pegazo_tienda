@@ -28,6 +28,28 @@ export default function FiltersDrawer({ open, onClose, filters }) {
           )}
         </div>
 
+        <Section title="Disponibilidad">
+          {[
+            ["", "Todos"],
+            ["in", "Disponibles"],
+            ["out", "Agotados"],
+          ].map(([val, label]) => (
+            <label
+              key={val || "all"}
+              className="flex items-center gap-2 text-sm cursor-pointer"
+            >
+              <input
+                type="radio"
+                name="availability-mobile"
+                checked={(get("availability") || "") === val}
+                onChange={() => set("availability", val)}
+                className="accent-(--brand-primary)"
+              />
+              {label}
+            </label>
+          ))}
+        </Section>
+
         {filters.brands?.length > 0 && (
           <Section title="Marca">
             {filters.brands.map((b) => (

@@ -8,16 +8,10 @@ export default function FiltersSidebar({ filters }) {
   if (!filters) return null;
 
   return (
-    <aside
-      className="
-        bg-(--bg-page)
-        p-5
-        rounded-xl
-        border border-(--border-soft)
-        shadow-sm
-      "
-    >
-      <h3 className="font-semibold mb-4">Filtrar por</h3>
+    <aside className="rounded-lg border border-(--border-soft) bg-(--bg-page) p-4">
+      <h3 className="mb-4 text-base font-semibold text-(--text-primary)">
+        Filtrar por
+      </h3>
 
       <Group title="Disponibilidad">
         {[
@@ -74,14 +68,14 @@ export default function FiltersSidebar({ filters }) {
             placeholder={`Desde ${filters.price.min}`}
             value={get("minPrice")}
             onChange={(e) => set("minPrice", e.target.value)}
-            className="w-full border rounded px-2 py-1"
+            className="w-full rounded-md border border-(--border-soft) px-2 py-1 text-sm focus:border-(--brand-accent) focus:outline-none"
           />
           <input
             type="number"
             placeholder={`Hasta ${filters.price.max}`}
             value={get("maxPrice")}
             onChange={(e) => set("maxPrice", e.target.value)}
-            className="w-full border rounded px-2 py-1"
+            className="w-full rounded-md border border-(--border-soft) px-2 py-1 text-sm focus:border-(--brand-accent) focus:outline-none"
           />
         </div>
       </Group>

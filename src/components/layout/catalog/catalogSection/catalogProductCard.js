@@ -127,7 +127,7 @@ export default function CatalogProductCard({ product, category }) {
   // prominente con % de descuento, título liviano y una acción clara. Colores
   // 100% del tema del dueño.
   return (
-    <article className="group flex flex-col overflow-hidden rounded-xl border border-(--border-soft) bg-(--bg-page) transition-all duration-200 hover:-translate-y-0.5 hover:border-(--border-strong) hover:shadow-(--shadow-lg)">
+    <article className="group flex flex-col overflow-hidden rounded-lg border border-(--border-soft) bg-(--bg-page) transition-all duration-200 hover:-translate-y-0.5 hover:border-(--border-strong) hover:shadow-(--shadow-lg)">
       {/* Imagen con galería en hover (cambiar fotos sin salir de la lista) */}
       <div className="relative aspect-square bg-(--bg-page)">
         <Link href={`/${category}/${product.slug}`} className="block h-full w-full">
@@ -232,13 +232,14 @@ export default function CatalogProductCard({ product, category }) {
           </div>
         ) : null}
 
-        {/* Precio: Antes (tachado) + Ahora (grande) + % OFF en verde */}
+        {/* Precio anterior tachado */}
         {product.oldPrice && product.oldPrice > product.price && (
           <span className="mt-0.5 text-xs text-(--text-muted) line-through">
             ${product.oldPrice.toLocaleString()}
           </span>
         )}
-        <div className="flex items-center gap-2">
+        {/* Precio de venta + % OFF (pill verde, estilo Mercado Libre) */}
+        <div className="flex flex-wrap items-center gap-2">
           <span className="text-xl font-semibold text-(--text-primary) sm:text-2xl">
             ${product.price.toLocaleString()}
             {isWeight && (
@@ -246,7 +247,7 @@ export default function CatalogProductCard({ product, category }) {
             )}
           </span>
           {product.discount > 0 && (
-            <span className="text-sm font-semibold text-(--success)">
+            <span className="rounded bg-(--success) px-1.5 py-0.5 text-xs font-bold text-white">
               {product.discount}% OFF
             </span>
           )}
