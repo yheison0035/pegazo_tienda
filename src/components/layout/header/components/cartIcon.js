@@ -13,10 +13,10 @@ export default function CartIcon() {
     <>
       <button
         onClick={() => setOpen(true)}
-        className="relative cursor-pointer"
+        className="group relative flex cursor-pointer items-center rounded-full p-2 text-(--text-primary) transition hover:bg-(--bg-soft) hover:text-(--brand-accent)"
         aria-label="Carrito de compras"
       >
-        <ShoppingCartIcon className="w-6 h-6 text-(--text-primary) hover:text-(--brand-accent) transition" />
+        <ShoppingCartIcon className="w-6 h-6 transition group-hover:scale-110" />
 
         {count > 0 && (
           <span

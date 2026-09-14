@@ -4,6 +4,7 @@ import Image from "next/image";
 import SearchBar from "./search/searchBar";
 import UserIcon from "./userIcon";
 import CartIcon from "./cartIcon";
+import TrackOrder from "./trackOrder";
 import { useCart } from "@/context/cartContext";
 import Link from "next/link";
 
@@ -42,7 +43,8 @@ export default function HeaderTop() {
         <SearchBar />
       </div>
 
-      <div className="flex justify-center md:justify-end gap-6 text-(--text-primary)">
+      <div className="flex items-center justify-center md:justify-end gap-2 sm:gap-3 text-(--text-primary)">
+        <TrackOrder />
         <UserIcon />
         <CartIcon count={count} />
       </div>

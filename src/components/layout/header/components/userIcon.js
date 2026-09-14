@@ -18,11 +18,11 @@ export default function UserIcon() {
       href="/mi-cuenta"
       aria-label={isAuthenticated ? "Mi cuenta" : "Iniciar sesión"}
       title={isAuthenticated ? "Mi cuenta" : "Iniciar sesión"}
-      className="flex items-center gap-2 text-(--text-primary) hover:text-(--brand-accent) transition"
+      className="group flex items-center gap-2 rounded-full p-2 text-(--text-primary) transition hover:bg-(--bg-soft) hover:text-(--brand-accent)"
     >
       {isAuthenticated ? (
         <span
-          className="flex h-8 w-8 items-center justify-center rounded-full bg-(--brand-accent) text-sm font-bold text-white"
+          className="flex h-8 w-8 items-center justify-center rounded-full bg-(--brand-accent) text-sm font-bold text-white transition group-hover:scale-110"
           aria-hidden
         >
           {initials(customer?.name) || (
@@ -30,7 +30,7 @@ export default function UserIcon() {
           )}
         </span>
       ) : (
-        <UserOutlineIcon className="h-6 w-6 cursor-pointer" />
+        <UserOutlineIcon className="h-6 w-6 cursor-pointer transition group-hover:scale-110" />
       )}
     </Link>
   );
