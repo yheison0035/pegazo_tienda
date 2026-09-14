@@ -13,6 +13,8 @@ import {
   buildWebSiteSchema,
   siteDescription,
   siteName,
+  siteTitle,
+  siteKeywords,
 } from "@/lib/seo";
 
 // Todo depende del dominio de la petición: nada se puede prerenderizar.
@@ -34,8 +36,10 @@ export async function generateMetadata() {
     };
   }
 
-  const title = settings?.metaTitle || siteName(website);
+  // Título dinámico por vertical (respeta el metaTitle propio si existe).
+  const title = siteTitle(website);
   const description = siteDescription(website);
+  const keywords = siteKeywords(website);
   const logo = company.logo;
 
   // El icono de la pestaña es el favicon que suba la empresa y, si no tiene,
@@ -51,6 +55,7 @@ export async function generateMetadata() {
     },
 
     description,
+    keywords,
 
     applicationName: siteName(website),
 

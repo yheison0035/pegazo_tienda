@@ -9,6 +9,33 @@
 const COUNTRY = "CO";
 const CURRENCY = "COP";
 
+// SEO por tipo de negocio (vertical): tipo de schema.org, una descripción
+// orientada al negocio y palabras clave. Todo se genera dinámicamente según el
+// `company.type`, para que la tienda de cualquier vertical quede bien posicionada
+// sin que el dueño configure nada. Si el tipo no está aquí, cae al genérico.
+const VERTICAL_SEO = {
+  RESTAURANTE: { schemaType: "Restaurant", label: "Restaurante", desc: (n) => `Pide a domicilio en ${n}: nuestro menú, promociones y entrega rápida.`, keywords: ["restaurante", "domicilios", "comida a domicilio", "menú", "pedir comida"] },
+  COMIDA_RAPIDA: { schemaType: "FastFoodRestaurant", label: "Comidas rápidas", desc: (n) => `Pide comidas rápidas a domicilio en ${n}: hamburguesas, perros y más.`, keywords: ["comidas rápidas", "domicilios", "hamburguesas", "perros calientes", "pedir comida"] },
+  CAFETERIA: { schemaType: "CafeOrCoffeeShop", label: "Cafetería", desc: (n) => `Café, postres y desayunos en ${n}. Pide a domicilio o recoge en tienda.`, keywords: ["cafetería", "café", "postres", "desayunos", "domicilios"] },
+  SERVICIOS: { schemaType: "HealthAndBeautyBusiness", label: "Barbería y belleza", desc: (n) => `Agenda tu cita en ${n}: servicios de barbería y belleza, y productos.`, keywords: ["barbería", "peluquería", "belleza", "agendar cita", "productos de cuidado"] },
+  ODONTOLOGIA: { schemaType: "Dentist", label: "Odontología", desc: (n) => `Agenda tu cita odontológica en ${n}. Servicios de salud oral.`, keywords: ["odontología", "dentista", "salud oral", "cita odontológica"] },
+  DROGUERIA: { schemaType: "Pharmacy", label: "Droguería", desc: (n) => `Compra medicamentos y productos de salud en ${n} con entrega a domicilio.`, keywords: ["droguería", "farmacia", "medicamentos", "salud", "domicilios"] },
+  SUPERMERCADO: { schemaType: "GroceryStore", label: "Supermercado", desc: (n) => `Haz tu mercado en ${n} con entrega a domicilio. Precios y productos frescos.`, keywords: ["supermercado", "mercado", "domicilios", "abarrotes", "canasta familiar"] },
+  FRUVER: { schemaType: "GroceryStore", label: "Fruver", desc: (n) => `Frutas y verduras frescas en ${n} con entrega a domicilio.`, keywords: ["fruver", "frutas", "verduras", "domicilios", "frescos"] },
+  CARNICERIA: { schemaType: "GroceryStore", label: "Carnicería", desc: (n) => `Carnes frescas en ${n} con entrega a domicilio.`, keywords: ["carnicería", "carnes", "domicilios", "res", "cerdo", "pollo"] },
+  ROPA: { schemaType: "ClothingStore", label: "Moda y ropa", desc: (n) => `Ropa y moda en ${n}. Compra online con envíos a todo el país.`, keywords: ["ropa", "moda", "tienda de ropa", "comprar ropa online"] },
+  CALZADO: { schemaType: "ShoeStore", label: "Calzado", desc: (n) => `Calzado para toda la familia en ${n}. Compra online con envíos.`, keywords: ["calzado", "zapatos", "tenis", "tienda de calzado", "comprar zapatos"] },
+  FLORISTERIA: { schemaType: "Florist", label: "Floristería", desc: (n) => `Flores y arreglos en ${n} con entrega a domicilio.`, keywords: ["floristería", "flores", "arreglos florales", "domicilios", "ramos"] },
+  LAVADO_VEHICULOS: { schemaType: "AutoWash", label: "Lavado de vehículos", desc: (n) => `Agenda el lavado de tu vehículo en ${n}.`, keywords: ["lavado de autos", "lavado de vehículos", "autolavado", "agendar"] },
+  TELEVENTAS: { schemaType: "Store", label: "Tienda online", desc: (n) => `Compra online en ${n} con envíos a todo el país y pago seguro.`, keywords: ["tienda online", "comprar online", "envíos", "ofertas"] },
+  ECOMMERCE: { schemaType: "OnlineStore", label: "Tienda online", desc: (n) => `Compra online en ${n} con envíos a todo el país y pago seguro.`, keywords: ["tienda online", "ecommerce", "comprar online", "envíos"] },
+};
+
+function verticalSeo(website) {
+  const type = (website?.company?.type || "").toUpperCase();
+  return VERTICAL_SEO[type] || null;
+}
+
 function clean(object) {
   return Object.fromEntries(
     Object.entries(object).filter(
@@ -27,11 +54,35 @@ export function siteName(website) {
   );
 }
 
+// Título por defecto para buscadores: si el dueño puso uno propio se respeta;
+// si no, se arma dinámico con el nombre + la vertical ("RAGNOR · Barbería").
+export function siteTitle(website) {
+  const custom = website?.settings?.metaTitle;
+  if (custom) return custom;
+  const name = siteName(website);
+  const v = verticalSeo(website);
+  return v?.label ? `${name} · ${v.label}` : name;
+}
+
 export function siteDescription(website) {
-  return (
-    website?.settings?.metaDescription ||
-    `Compra online en ${siteName(website)} con envíos a todo el país.`
-  );
+  if (website?.settings?.metaDescription) return website.settings.metaDescription;
+  const v = verticalSeo(website);
+  if (v?.desc) return v.desc(siteName(website));
+  return `Compra online en ${siteName(website)} con envíos a todo el país.`;
+}
+
+// Palabras clave por vertical + el nombre del negocio.
+export function siteKeywords(website) {
+  const v = verticalSeo(website);
+  const base = v?.keywords ? [...v.keywords] : ["tienda online", "comprar online"];
+  const name = siteName(website);
+  if (name) base.push(name);
+  return base;
+}
+
+// Tipo de negocio en schema.org según la vertical (default: Store).
+export function storeSchemaType(website) {
+  return verticalSeo(website)?.schemaType || "Store";
 }
 
 /** Redes sociales configuradas, para `sameAs`. */
@@ -79,7 +130,7 @@ export function buildStoreSchema(website, siteUrl) {
 
   return clean({
     "@context": "https://schema.org",
-    "@type": "Store",
+    "@type": storeSchemaType(website),
     "@id": `${siteUrl}/#store`,
     name: siteName(website),
     legalName: company.name,
