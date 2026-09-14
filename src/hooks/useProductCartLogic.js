@@ -85,11 +85,11 @@ export default function useProductCartLogic(product, initialQty = 1) {
   function handleAddToCart() {
     if (hasColors && !selectedColor) {
       setError("Selecciona un color");
-      return;
+      return false;
     }
     if (hasSize && !selectedSize) {
       setError("Selecciona una talla");
-      return;
+      return false;
     }
     if (!colorStock || qty > colorStock) {
       setError(
@@ -97,7 +97,7 @@ export default function useProductCartLogic(product, initialQty = 1) {
           ? `Solo hay ${colorStock} kg disponibles`
           : `Solo hay ${colorStock} unidades disponibles`
       );
-      return;
+      return false;
     }
 
     const key = `${product.id}-${selectedColor ?? ""}-${selectedSize ?? ""}`;
@@ -129,6 +129,7 @@ export default function useProductCartLogic(product, initialQty = 1) {
     }
 
     setError(null);
+    return true;
   }
 
   const alreadyInCart = !!itemsInCart.find(

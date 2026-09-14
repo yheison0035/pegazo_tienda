@@ -46,10 +46,13 @@ export default function ProductPage({ category, productSlug, initialProduct = nu
             <div className="pt-8">
               <Breadcrumbs category={category} product={product.name} />
 
-              <section className="grid grid-cols-1 lg:grid-cols-2 gap-10 mt-6">
-                <ProductGallery images={product.images} />
-
-                <ProductInfo product={product} category={category} />
+              <section className="mt-6 grid grid-cols-1 gap-6 lg:grid-cols-12 lg:gap-8">
+                <div className="lg:col-span-5">
+                  <ProductGallery images={product.images} />
+                </div>
+                <div className="lg:col-span-7">
+                  <ProductInfo product={product} category={category} />
+                </div>
               </section>
               <ProductDescription product={product} />
             </div>
