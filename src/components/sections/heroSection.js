@@ -51,12 +51,13 @@ export default function HeroSection() {
           />
           <div className="absolute inset-0 bg-black/10" />
 
-          {/* Imagen COMPLETA (sin recortar), centrada. */}
+          {/* Imagen COMPLETA (sin recortar), ajustada a la banda en cualquier
+              pantalla (object-contain rellena con el fondo desenfocado). */}
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
             src={banner.image}
             alt={banner.title || getCompanyName(website)}
-            className="relative z-10 mx-auto h-full w-auto max-w-full object-contain"
+            className="absolute inset-0 z-10 h-full w-full object-contain"
           />
 
           {(banner.title || banner.subtitle || banner.buttonText) && (
