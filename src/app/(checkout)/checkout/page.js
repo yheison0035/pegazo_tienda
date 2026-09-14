@@ -70,12 +70,16 @@ export default function CheckoutPage() {
       return;
     }
 
-    // Seguridad: si eligió pago en línea pero la tienda no tiene Wompi, aborta.
+    // Si eligió pago en línea pero la pasarela aún no está lista, mostramos un
+    // mensaje AMABLE (no técnico) y sugerimos otra opción, en vez de exponer que
+    // la tienda no está configurada.
     if (
       paymentMethod === "online" &&
       !(company?.wompiEnabled && company?.wompiPublicKey)
     ) {
-      toast.error("Esta tienda no tiene pagos en línea disponibles.");
+      toast.error(
+        "Lo sentimos, tuvimos un problema con el pago en línea. No es culpa tuya. Intenta de nuevo más tarde o elige otro método de pago.",
+      );
       return;
     }
 
@@ -151,7 +155,19 @@ export default function CheckoutPage() {
       toast.success(`¡Pedido ${order.orderCode} confirmado!`);
       router.push(`/checkout/result?order=${order.orderCode}`);
     } catch (error) {
-      toast.error(error.message || "No pudimos crear tu pedido");
+      // Los avisos útiles del backend (stock agotado, datos inválidos) se
+      // muestran tal cual. Cualquier otra falla (red, 500, pasarela) recibe un
+      // mensaje amable en vez de un error técnico que asuste al cliente.
+      const raw = String(error?.message || "");
+      const isUserFacing =
+        /stock|inventario|disponib|carrito|dato|correo|teléfono|telefono|dirección|direccion/i.test(
+          raw,
+        );
+      toast.error(
+        isUserFacing && raw
+          ? raw
+          : "Lo sentimos, tuvimos un problema interno. No es culpa tuya. Por favor inténtalo de nuevo en unos minutos.",
+      );
     } finally {
       setIsSubmitting(false);
     }
