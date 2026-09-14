@@ -39,20 +39,32 @@ export default function useProductCartLogic(product, initialQty = 1) {
 
   const itemsInCart = getItemsByProduct(product.id);
 
-  // Variante resuelta según color/talla elegidos.
-  const resolved = useMemo(() => {
-    return variants.find(
+  // TODAS las variantes que coinciden con la selección (color/talla). Puede
+  // haber DUPLICADAS con el mismo color/talla (dato del CRM): se manejan sumando
+  // su stock y eligiendo una con existencias para el carrito.
+  const matching = useMemo(() => {
+    return variants.filter(
       (v) =>
         (!hasColors || v.name === selectedColor) &&
         (!hasSize || v.size === selectedSize)
     );
   }, [variants, hasColors, hasSize, selectedColor, selectedSize]);
 
+  // Variante concreta para el carrito: preferir una CON stock.
+  const resolved =
+    matching.find((v) => (v.stock || 0) > 0) ||
+    matching[0] ||
+    (variants.length === 1 ? variants[0] : null);
+
   const selectedVariantId = resolved?.variantId ?? variants[0]?.variantId ?? null;
   // Los elaborados sin control de stock (platos) se pueden pedir siempre.
   const tracksStock = product.trackStock !== false;
-  const rawStock =
-    resolved?.stock ?? (variants.length === 1 ? variants[0].stock : 0);
+  // Stock = suma de TODAS las variantes que coinciden (maneja duplicados).
+  const rawStock = matching.length
+    ? matching.reduce((s, v) => s + (v.stock || 0), 0)
+    : variants.length === 1
+      ? variants[0].stock
+      : 0;
   const colorStock = tracksStock ? rawStock : 9999;
 
   // Preselección: color único / talla única / variante única.
