@@ -33,27 +33,38 @@ export default function HeroSection() {
   if (banners.length > 0) {
     const banner = banners[Math.min(current, banners.length - 1)];
 
+    // Banner a TODO el ancho (edge-to-edge), pegado bajo el header. La imagen se
+    // muestra COMPLETA (sin recortar): ancho 100% y alto natural, estilo tiendas
+    // grandes (Mercado Libre). Todos los slides se apilan para que el contenedor
+    // tome la altura del banner activo sin saltos bruscos.
     return (
-      <section className="relative overflow-hidden rounded-(--radius-lg)">
-        <div className="relative aspect-[21/9] w-full bg-(--bg-muted)">
-          {/* Los banners pueden venir de cualquier dominio: se usa <img>. */}
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
-            src={banner.image}
-            alt={banner.title || getCompanyName(website)}
-            className="absolute inset-0 h-full w-full object-cover"
-          />
+      <section className="relative w-full overflow-hidden bg-(--bg-muted)">
+        <div className="relative w-full">
+          {banners.map((b, index) => (
+            /* eslint-disable-next-line @next/next/no-img-element */
+            <img
+              key={b.id ?? index}
+              src={b.image}
+              alt={b.title || getCompanyName(website)}
+              className={`block w-full h-auto ${
+                index === current
+                  ? "relative"
+                  : "pointer-events-none absolute inset-0 opacity-0"
+              }`}
+              aria-hidden={index === current ? undefined : true}
+            />
+          ))}
 
           {(banner.title || banner.subtitle || banner.buttonText) && (
-            <div className="absolute inset-0 flex flex-col justify-center gap-3 bg-gradient-to-r from-black/60 to-transparent px-6 md:px-12">
+            <div className="absolute inset-0 flex flex-col justify-center gap-3 bg-gradient-to-r from-black/60 to-transparent px-4 sm:px-8 md:px-16">
               {banner.title && (
-                <h2 className="max-w-xl text-2xl font-bold text-white md:text-4xl">
+                <h2 className="max-w-xl text-xl font-bold text-white sm:text-2xl md:text-4xl">
                   {banner.title}
                 </h2>
               )}
 
               {banner.subtitle && (
-                <p className="max-w-lg text-sm text-white/90 md:text-base">
+                <p className="max-w-lg text-xs text-white/90 sm:text-sm md:text-base">
                   {banner.subtitle}
                 </p>
               )}
@@ -99,7 +110,6 @@ export default function HeroSection() {
   return (
     <section
       className="
-        rounded-(--radius-lg)
         bg-(--brand-primary)
         px-6 py-12 text-center md:px-12 md:py-16
       "
