@@ -1,6 +1,10 @@
 "use client";
 
-import { PlusIcon, ShoppingCartIcon } from "@heroicons/react/24/outline";
+import {
+  PlusIcon,
+  MinusIcon,
+  ShoppingCartIcon,
+} from "@heroicons/react/24/outline";
 import Link from "next/link";
 import ProductImage from "@/components/ui/productImage";
 import { getColorHexByName } from "@/utils/getColor";
@@ -19,13 +23,22 @@ export default function CatalogProductCard({ product, category }) {
     qty,
     error,
     selectColor,
+    incrementQty,
+    decrementQty,
     handleAddToCart,
     alreadyInCart,
-    actionLabel,
   } = useProductCartLogic({ ...product, category }, 1);
   const v = useVertical();
 
   if (!ready) return null;
+
+  // Ahorro (para el detalle "Ahorras $X") y etiquetas del producto.
+  const savings =
+    product.oldPrice && product.oldPrice > product.price
+      ? product.oldPrice - product.price
+      : 0;
+  const lowStock = colorStock > 0 && colorStock <= 5;
+  const productTags = Array.isArray(product.tags) ? product.tags.slice(0, 2) : [];
 
   // Layout "menú" (restaurante / comida rápida / cafetería): tarjeta horizontal
   // con foto + nombre + descripción + precio y botón de agregar.
@@ -111,28 +124,52 @@ export default function CatalogProductCard({ product, category }) {
         </div>
       </Link>
 
-      <div className="flex flex-1 flex-col gap-1 p-3 sm:p-4">
-        {/* Precio (estilo ML): valor anterior arriba, precio grande y % en verde */}
-        {product.oldPrice && (
+      <div className="flex flex-1 flex-col gap-1.5 p-3 sm:p-4">
+        {/* Etiquetas */}
+        {(product.discount > 0 || lowStock || productTags.length > 0) && (
+          <div className="flex flex-wrap items-center gap-1.5">
+            {product.discount > 0 && (
+              <span className="rounded-md bg-(--bg-muted) px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wide text-(--cta-primary)">
+                Oferta
+              </span>
+            )}
+            {productTags.map((t) => (
+              <span
+                key={t}
+                className="rounded-md bg-(--bg-muted) px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-(--text-secondary)"
+              >
+                {t}
+              </span>
+            ))}
+            {lowStock && (
+              <span className="rounded-md bg-(--bg-muted) px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-(--warning)">
+                Últimas unidades
+              </span>
+            )}
+          </div>
+        )}
+
+        {/* Precio: Antes (tachado) y Ahora (grande) + ahorro */}
+        {product.oldPrice && product.oldPrice > product.price && (
           <span className="text-xs text-(--text-muted) line-through">
-            ${product.oldPrice.toLocaleString()}
+            Antes ${product.oldPrice.toLocaleString()}
           </span>
         )}
         <div className="flex items-baseline gap-2">
-          <span className="text-xl font-semibold text-(--text-primary) sm:text-2xl">
+          <span className="text-xl font-bold text-(--text-primary) sm:text-2xl">
             ${product.price.toLocaleString()}
             {isWeight && (
               <span className="text-xs font-medium text-(--text-muted)"> /kg</span>
             )}
           </span>
-          {product.discount > 0 && (
-            <span className="text-sm font-semibold text-(--success)">
-              {product.discount}% OFF
-            </span>
-          )}
         </div>
+        {savings > 0 && (
+          <span className="text-xs font-semibold text-(--success)">
+            Ahorras ${savings.toLocaleString()}
+          </span>
+        )}
 
-        {/* Título liviano, 2 líneas (como ML) */}
+        {/* Título liviano, 2 líneas */}
         <Link href={`/${category}/${product.slug}`}>
           <h3 className="mt-0.5 line-clamp-2 min-h-9 text-sm text-(--text-secondary) transition hover:text-(--brand-accent)">
             {product.name}
@@ -141,7 +178,7 @@ export default function CatalogProductCard({ product, category }) {
 
         {/* Colores (compacto) */}
         {hasColors && (
-          <div className="mt-1 flex items-center gap-1.5">
+          <div className="flex items-center gap-1.5">
             {colorOptions.map((c) => (
               <button
                 key={c.name}
@@ -158,21 +195,16 @@ export default function CatalogProductCard({ product, category }) {
           </div>
         )}
 
-        {/* Estado (stock/carrito) sin ocupar mucho espacio */}
+        {/* Estado (carrito / error) */}
         <div className="min-h-4">
-          {selectedColor && colorStock <= 5 && (
-            <p className="text-xs font-medium text-(--warning)">
-              ¡Solo quedan {colorStock}!
-            </p>
-          )}
           {alreadyInCart && (
-            <p className="text-xs text-(--success)">✔ {qty} en tu carrito</p>
+            <p className="text-xs text-(--success)">✔ En tu carrito</p>
           )}
           {error && <p className="text-xs font-medium text-(--danger)">{error}</p>}
         </div>
 
-        {/* Acción */}
-        <div className="mt-auto pt-1">
+        {/* Acción: cantidad fácil (+/−) + agregar */}
+        <div className="mt-auto flex flex-col gap-2 pt-1">
           {hasSize ? (
             <Link
               href={`/${category}/${product.slug}`}
@@ -181,13 +213,36 @@ export default function CatalogProductCard({ product, category }) {
               Ver opciones
             </Link>
           ) : (
-            <button
-              onClick={handleAddToCart}
-              className="flex w-full items-center justify-center gap-1.5 rounded-lg bg-(--cta-primary) p-2 text-sm font-semibold text-white transition hover:bg-(--cta-primary-hover) cursor-pointer"
-            >
-              <ShoppingCartIcon className="h-4 w-4" />
-              {actionLabel}
-            </button>
+            <>
+              <div className="flex items-center justify-between rounded-lg border border-(--border-soft)">
+                <button
+                  onClick={decrementQty}
+                  aria-label="Disminuir"
+                  className="flex h-9 w-10 items-center justify-center text-(--text-secondary) transition hover:bg-(--bg-soft) cursor-pointer"
+                >
+                  <MinusIcon className="h-4 w-4" />
+                </button>
+                <span className="text-sm font-semibold text-(--text-primary)">
+                  {qty}
+                  {isWeight ? " kg" : ""}
+                </span>
+                <button
+                  onClick={incrementQty}
+                  disabled={qty >= colorStock}
+                  aria-label="Aumentar"
+                  className="flex h-9 w-10 items-center justify-center text-(--text-secondary) transition hover:bg-(--bg-soft) disabled:opacity-40 cursor-pointer"
+                >
+                  <PlusIcon className="h-4 w-4" />
+                </button>
+              </div>
+              <button
+                onClick={handleAddToCart}
+                className="flex w-full items-center justify-center gap-1.5 rounded-lg bg-(--cta-primary) p-2 text-sm font-semibold text-white transition hover:bg-(--cta-primary-hover) cursor-pointer"
+              >
+                <ShoppingCartIcon className="h-4 w-4" />
+                {alreadyInCart ? "Actualizar" : "Agregar"}
+              </button>
+            </>
           )}
         </div>
       </div>

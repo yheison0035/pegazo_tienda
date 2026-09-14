@@ -13,5 +13,7 @@ export function mapSearchProduct(product) {
     category: product.category,
     unit: product.unit,
     trackStock: product.trackStock,
+    // Etiquetas opcionales del producto (si el backend las envía).
+    tags: product.tags || product.labels || [],
   };
 }
