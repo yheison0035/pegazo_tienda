@@ -12,6 +12,7 @@ import ProductImage from "@/components/ui/productImage";
 import useProductCartLogic from "@/hooks/useProductCartLogic";
 import useVertical from "@/hooks/useVertical";
 import { useWebsiteContext } from "@/context/websiteContext";
+import { isOutOfStock } from "@/utils/stock";
 
 export default function CatalogProductCard({ product, category }) {
   const {
@@ -30,7 +31,8 @@ export default function CatalogProductCard({ product, category }) {
   if (!ready) return null;
 
   // Etiquetas del producto.
-  const lowStock = colorStock > 0 && colorStock <= 5;
+  const soldOut = isOutOfStock(product);
+  const lowStock = !soldOut && colorStock > 0 && colorStock <= 5;
   const productTags = Array.isArray(product.tags) ? product.tags.slice(0, 3) : [];
 
   // Envío gratis (aprox. por el umbral nacional configurado por el dueño).
@@ -134,7 +136,9 @@ export default function CatalogProductCard({ product, category }) {
             <img
               src={currentImg}
               alt={product.name}
-              className="h-full w-full object-contain p-4 transition-transform duration-300 group-hover:scale-[1.03]"
+              className={`h-full w-full object-contain p-4 transition-transform duration-300 group-hover:scale-[1.03] ${
+                soldOut ? "opacity-45 grayscale" : ""
+              }`}
             />
           ) : (
             <ProductImage
@@ -146,6 +150,11 @@ export default function CatalogProductCard({ product, category }) {
 
         {/* Etiquetas sobre la imagen */}
         <div className="pointer-events-none absolute left-3 top-3 z-10 flex flex-col items-start gap-1">
+          {soldOut && (
+            <span className="rounded-md bg-(--text-muted) px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-white shadow-sm">
+              Agotado
+            </span>
+          )}
           {lowStock && (
             <span className="rounded-md bg-(--warning) px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-white shadow-sm">
               ¡Últimas {colorStock}!

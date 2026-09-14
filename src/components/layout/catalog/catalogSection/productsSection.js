@@ -1,16 +1,28 @@
 "use client";
 
 import { useRef, useEffect } from "react";
+import { useSearchParams } from "next/navigation";
 import ProductCard from "./productCard";
 import SkeletonGrid from "@/components/ui/skeletons/skeletonGrid";
 import Breadcrumbs from "../breadcrumbs";
 import MobileFiltersBar from "@/components/filters/mobileFiltersBar";
 import { DesktopSort } from "@/components/filters/desktopSort";
 import useVertical from "@/hooks/useVertical";
+import { isOutOfStock } from "@/utils/stock";
 
 export default function ProductsSection({ category, catalog }) {
   const { products, filters, loadMore, hasMore, loadingMore } = catalog;
   const v = useVertical();
+  const searchParams = useSearchParams();
+
+  // Filtro de disponibilidad (cliente): la API trae el listado completo, así que
+  // se combina con los demás filtros que ya aplicó el backend.
+  const availability = searchParams.get("availability") || "";
+  const shown = availability
+    ? products.filter((p) =>
+        availability === "out" ? isOutOfStock(p) : !isOutOfStock(p),
+      )
+    : products;
   // En verticales de menú (restaurante/comida) el catálogo se lista en filas
   // anchas (1-2 columnas); en retail sigue en grilla densa.
   const isMenu = v.layout === "menu";
@@ -35,7 +47,7 @@ export default function ProductsSection({ category, catalog }) {
 
   return (
     <section className="space-y-4">
-      <MobileFiltersBar total={products.length} filters={filters} />
+      <MobileFiltersBar total={shown.length} filters={filters} />
 
       <div className="md:hidden px-4">
         <Breadcrumbs category={category} />
@@ -51,9 +63,9 @@ export default function ProductsSection({ category, catalog }) {
           <SkeletonGrid count={9} cols="grid-cols-2 md:grid-cols-3" compact />
         )}
 
-        {products.length > 0 && (
+        {shown.length > 0 && (
           <div className={gridClass}>
-            {products.map((product) => (
+            {shown.map((product) => (
               <ProductCard
                 key={`${product.id}-${product.slug}`}
                 product={product}
@@ -63,9 +75,13 @@ export default function ProductsSection({ category, catalog }) {
           </div>
         )}
 
-        {!loadingMore && products.length === 0 && (
+        {!loadingMore && shown.length === 0 && (
           <div className="py-20 text-center text-(--text-muted)">
-            No se encontraron productos.
+            {availability === "out"
+              ? "No hay productos agotados."
+              : availability === "in"
+                ? "No hay productos disponibles con estos filtros."
+                : "No se encontraron productos."}
           </div>
         )}
 

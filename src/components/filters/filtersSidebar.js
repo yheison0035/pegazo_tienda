@@ -19,6 +19,28 @@ export default function FiltersSidebar({ filters }) {
     >
       <h3 className="font-semibold mb-4">Filtrar por</h3>
 
+      <Group title="Disponibilidad">
+        {[
+          ["", "Todos"],
+          ["in", "Disponibles"],
+          ["out", "Agotados"],
+        ].map(([val, label]) => (
+          <label
+            key={val || "all"}
+            className="flex items-center gap-2 text-sm cursor-pointer"
+          >
+            <input
+              type="radio"
+              name="availability"
+              checked={(get("availability") || "") === val}
+              onChange={() => set("availability", val)}
+              className="accent-(--brand-primary)"
+            />
+            {label}
+          </label>
+        ))}
+      </Group>
+
       {filters.colors?.length > 0 && (
         <Group title="Color">
           {filters.colors.map((c) => (
