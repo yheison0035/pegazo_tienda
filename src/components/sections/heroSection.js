@@ -38,8 +38,9 @@ export default function HeroSection() {
 
     return (
       <section className="relative w-full overflow-hidden bg-(--bg-muted)">
-        {/* Banda de altura controlada, a todo el ancho. */}
-        <div className="relative h-48 w-full sm:h-64 md:h-80 lg:h-[26rem]">
+        {/* Banda de altura controlada, a todo el ancho (tamaño promedio de
+            tiendas grandes: ~480-540px en desktop). */}
+        <div className="relative h-56 w-full sm:h-72 md:h-[26rem] lg:h-[30rem] xl:h-[34rem]">
           {/* Fondo desenfocado (rellena la banda sin barras vacías). */}
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
