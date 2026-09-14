@@ -16,5 +16,10 @@ export function mapSearchProduct(product) {
     trackStock: product.trackStock,
     // Etiquetas opcionales del producto (si el backend las envía).
     tags: product.tags || product.labels || [],
+    // Datos opcionales para la card (si el backend los envía): marca, rating y
+    // ventas. Si no vienen, la card simplemente no los muestra.
+    brand: product.brand ?? null,
+    rating: product.rating ?? null,
+    sold: product.sold ?? product.soldCount ?? null,
   };
 }

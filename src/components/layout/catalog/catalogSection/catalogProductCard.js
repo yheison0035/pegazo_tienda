@@ -3,35 +3,28 @@
 import { useState } from "react";
 import {
   PlusIcon,
-  MinusIcon,
-  ShoppingCartIcon,
   ChevronLeftIcon,
   ChevronRightIcon,
 } from "@heroicons/react/24/outline";
+import { StarIcon as StarSolid } from "@heroicons/react/24/solid";
 import Link from "next/link";
 import ProductImage from "@/components/ui/productImage";
-import { getColorHexByName } from "@/utils/getColor";
 import useProductCartLogic from "@/hooks/useProductCartLogic";
 import useVertical from "@/hooks/useVertical";
+import { useWebsiteContext } from "@/context/websiteContext";
 
 export default function CatalogProductCard({ product, category }) {
   const {
     ready,
-    hasColors,
-    hasSize,
     isWeight,
-    colorOptions,
-    selectedColor,
     colorStock,
     qty,
     error,
-    selectColor,
-    incrementQty,
-    decrementQty,
     handleAddToCart,
     alreadyInCart,
   } = useProductCartLogic({ ...product, category }, 1);
   const v = useVertical();
+  const { website } = useWebsiteContext();
   const [imgIndex, setImgIndex] = useState(0);
 
   if (!ready) return null;
@@ -39,6 +32,10 @@ export default function CatalogProductCard({ product, category }) {
   // Etiquetas del producto.
   const lowStock = colorStock > 0 && colorStock <= 5;
   const productTags = Array.isArray(product.tags) ? product.tags.slice(0, 3) : [];
+
+  // Envío gratis (aprox. por el umbral nacional configurado por el dueño).
+  const freeFrom = website?.company?.storeShipping?.shipping?.freeFrom ?? null;
+  const freeShipping = freeFrom != null && product.price >= freeFrom;
 
   // Galería para el hover (varias fotos del producto). Acepta images[] o image
   // (arreglo o string).
@@ -197,15 +194,43 @@ export default function CatalogProductCard({ product, category }) {
         )}
       </div>
 
-      <div className="flex flex-1 flex-col gap-1.5 p-3 sm:p-4">
+      {/* Contenido (toda la tarjeta lleva al producto, estilo ML) */}
+      <Link
+        href={`/${category}/${product.slug}`}
+        className="flex flex-1 flex-col gap-1 p-3 sm:p-4"
+      >
+        {/* Título liviano, 2 líneas */}
+        <h3 className="line-clamp-2 min-h-9 text-sm text-(--text-secondary) transition group-hover:text-(--brand-accent)">
+          {product.name}
+        </h3>
+
+        {/* Marca + verificado */}
+        {product.brand && (
+          <p className="flex items-center gap-1 text-xs text-(--text-muted)">
+            {product.brand}
+            <span className="text-(--brand-accent)">✓</span>
+          </p>
+        )}
+
+        {/* Rating + vendidos */}
+        {product.rating ? (
+          <div className="flex items-center gap-1 text-xs text-(--text-muted)">
+            <StarSolid className="h-3.5 w-3.5 text-(--brand-accent)" />
+            <span className="font-medium text-(--text-secondary)">
+              {product.rating}
+            </span>
+            {product.sold ? <span>| +{product.sold} vendidos</span> : null}
+          </div>
+        ) : null}
+
         {/* Precio: Antes (tachado) + Ahora (grande) + % OFF en verde */}
         {product.oldPrice && product.oldPrice > product.price && (
-          <span className="text-xs text-(--text-muted) line-through">
+          <span className="mt-0.5 text-xs text-(--text-muted) line-through">
             ${product.oldPrice.toLocaleString()}
           </span>
         )}
         <div className="flex items-center gap-2">
-          <span className="text-xl font-bold text-(--text-primary) sm:text-2xl">
+          <span className="text-xl font-semibold text-(--text-primary) sm:text-2xl">
             ${product.price.toLocaleString()}
             {isWeight && (
               <span className="text-xs font-medium text-(--text-muted)"> /kg</span>
@@ -218,83 +243,21 @@ export default function CatalogProductCard({ product, category }) {
           )}
         </div>
 
-        {/* Título liviano, 2 líneas */}
-        <Link href={`/${category}/${product.slug}`}>
-          <h3 className="mt-0.5 line-clamp-2 min-h-9 text-sm text-(--text-secondary) transition hover:text-(--brand-accent)">
-            {product.name}
-          </h3>
-        </Link>
-
-        {/* Colores (compacto) */}
-        {hasColors && (
-          <div className="flex items-center gap-1.5">
-            {colorOptions.map((c) => (
-              <button
-                key={c.name}
-                onClick={() => selectColor(c)}
-                aria-label={`Color ${c.name}`}
-                className={`h-4 w-4 rounded-full border transition cursor-pointer sm:h-5 sm:w-5 ${
-                  selectedColor === c.name
-                    ? "border-(--brand-accent) scale-110"
-                    : "border-(--border-strong)"
-                }`}
-                style={{ backgroundColor: getColorHexByName(c.name) }}
-              />
-            ))}
-          </div>
+        {/* Envío gratis */}
+        {freeShipping && (
+          <span className="text-xs font-semibold text-(--success)">
+            Envío gratis
+          </span>
         )}
 
-        {/* Estado (carrito / error) */}
-        <div className="min-h-4">
-          {alreadyInCart && (
-            <p className="text-xs text-(--success)">✔ En tu carrito</p>
-          )}
-          {error && <p className="text-xs font-medium text-(--danger)">{error}</p>}
-        </div>
-
-        {/* Acción: cantidad fácil (+/−) + agregar */}
-        <div className="mt-auto flex flex-col gap-2 pt-1">
-          {hasSize ? (
-            <Link
-              href={`/${category}/${product.slug}`}
-              className="flex w-full items-center justify-center gap-1 rounded-lg border border-(--cta-primary) p-2 text-sm font-semibold text-(--cta-primary) transition hover:bg-(--cta-primary) hover:text-white"
-            >
-              Ver opciones
-            </Link>
-          ) : (
-            <>
-              <div className="flex items-center justify-between rounded-lg border border-(--border-soft)">
-                <button
-                  onClick={decrementQty}
-                  aria-label="Disminuir"
-                  className="flex h-9 w-10 items-center justify-center text-(--text-secondary) transition hover:bg-(--bg-soft) cursor-pointer"
-                >
-                  <MinusIcon className="h-4 w-4" />
-                </button>
-                <span className="text-sm font-semibold text-(--text-primary)">
-                  {qty}
-                  {isWeight ? " kg" : ""}
-                </span>
-                <button
-                  onClick={incrementQty}
-                  disabled={qty >= colorStock}
-                  aria-label="Aumentar"
-                  className="flex h-9 w-10 items-center justify-center text-(--text-secondary) transition hover:bg-(--bg-soft) disabled:opacity-40 cursor-pointer"
-                >
-                  <PlusIcon className="h-4 w-4" />
-                </button>
-              </div>
-              <button
-                onClick={handleAddToCart}
-                className="flex w-full items-center justify-center gap-1.5 rounded-lg bg-(--cta-primary) p-2 text-sm font-semibold text-white transition hover:bg-(--cta-primary-hover) cursor-pointer"
-              >
-                <ShoppingCartIcon className="h-4 w-4" />
-                {alreadyInCart ? "Actualizar" : "Agregar"}
-              </button>
-            </>
-          )}
-        </div>
-      </div>
+        {/* Estado en carrito */}
+        {alreadyInCart && (
+          <span className="mt-0.5 text-xs text-(--success)">✔ En tu carrito</span>
+        )}
+        {error && (
+          <span className="text-xs font-medium text-(--danger)">{error}</span>
+        )}
+      </Link>
     </article>
   );
 }
