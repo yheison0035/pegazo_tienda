@@ -12,6 +12,7 @@ import {
   siteDescription,
   siteName,
 } from "@/lib/seo";
+import { stripHtml } from "@/utils/sanitizeHtml";
 
 /** El producto se pide en el servidor para que salga en el HTML. */
 async function loadProduct(slug) {
@@ -83,7 +84,7 @@ export async function generateMetadata(props) {
   const productName = product?.name || humanize(productSlug);
 
   const description = product?.description
-    ? product.description.replace(/\s+/g, " ").trim().slice(0, 160)
+    ? stripHtml(product.description).replace(/\s+/g, " ").trim().slice(0, 160)
     : `${productName} en ${name}. ${baseDescription}`;
 
   const url = `${siteUrl}/${category}/${productSlug}`;

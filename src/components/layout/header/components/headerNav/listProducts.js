@@ -1,4 +1,5 @@
 import { slugifyCategory } from "@/utils/slugify";
+import { stripHtml } from "@/utils/sanitizeHtml";
 import ProductImage from "@/components/ui/productImage";
 import { formatText } from "@/utils/textFormat";
 import Link from "next/link";
@@ -52,8 +53,8 @@ export default function ListProductHeader({
         <p className="text-lg font-semibold text-(--text-primary)">
           {formatText(hoveredCat.cat.name, "capitalize")}
         </p>
-        <p className="text-sm text-(--text-muted) mt-1">
-          {hoveredCat.cat.description}
+        <p className="text-sm text-(--text-muted) mt-1 line-clamp-2">
+          {stripHtml(hoveredCat.cat.description)}
         </p>
       </div>
 

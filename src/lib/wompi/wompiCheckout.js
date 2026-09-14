@@ -52,10 +52,12 @@ export async function openWompiCheckout({
     `&amount-in-cents=${amountInCents}` +
     `&reference=${reference}` +
     `&signature:integrity=${signature}` +
-    // Cada tienda vuelve a SU dominio; la env solo sirve para forzarlo.
+    // Cada tienda vuelve a SU dominio; la env solo sirve para forzarlo. Se pasa
+    // el código del pedido para mostrarlo en la pantalla de resultado.
     `&redirect-url=${encodeURIComponent(
-      process.env.NEXT_PUBLIC_WOMPI_REDIRECT_URL ||
-        `${window.location.origin}/checkout/result`,
+      (process.env.NEXT_PUBLIC_WOMPI_REDIRECT_URL ||
+        `${window.location.origin}/checkout/result`) +
+        `?order=${encodeURIComponent(reference)}`,
     )}` +
     `&customer-data:email=${encodeURIComponent(customerEmail)}`;
 

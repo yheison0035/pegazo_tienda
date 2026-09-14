@@ -1,5 +1,6 @@
 import CatalogClient from "@/components/layout/catalog/catalogClient";
 import JsonLd from "@/components/seo/jsonLd";
+import RichHtml from "@/components/ui/richHtml";
 import {
   fetchFromApi,
   getSiteUrl,
@@ -59,12 +60,22 @@ export default async function CatalogPage(props) {
     name,
   });
 
+  const categoryDescription = catalog?.category?.description;
+
   return (
     <>
       <JsonLd schema={breadcrumb} />
       <JsonLd schema={itemList} />
 
       <CatalogClient category={category} initialCatalog={catalog} />
+
+      {categoryDescription && (
+        <div className="mx-auto w-full max-w-[1440px] px-4 pb-10">
+          <div className="rounded-2xl border border-(--border-soft) bg-(--bg-page) p-5 text-(--text-secondary) sm:p-6">
+            <RichHtml html={categoryDescription} />
+          </div>
+        </div>
+      )}
     </>
   );
 }

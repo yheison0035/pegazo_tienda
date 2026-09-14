@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import Image from "next/image";
 import {
   XMarkIcon,
@@ -28,6 +28,18 @@ export default function ProductGallery({ images = [] }) {
     (dir) => setActiveIndex((i) => (i + dir + total) % total),
     [total],
   );
+
+  // Swipe con el dedo dentro del lightbox (móvil).
+  const lbTouchX = useRef(null);
+  const onLbTouchStart = (e) => {
+    lbTouchX.current = e.touches[0].clientX;
+  };
+  const onLbTouchEnd = (e) => {
+    if (lbTouchX.current == null || total < 2) return;
+    const dx = e.changedTouches[0].clientX - lbTouchX.current;
+    if (Math.abs(dx) > 40) go(dx < 0 ? 1 : -1);
+    lbTouchX.current = null;
+  };
 
   // Teclado en el lightbox: Esc cierra, flechas cambian.
   useEffect(() => {
@@ -120,7 +132,7 @@ export default function ProductGallery({ images = [] }) {
             type="button"
             aria-label="Cerrar"
             onClick={() => setLightbox(false)}
-            className="absolute top-4 right-4 z-10 flex h-11 w-11 items-center justify-center rounded-full bg-white/15 text-white hover:bg-white/25"
+            className="absolute top-4 right-4 z-10 flex h-11 w-11 items-center justify-center rounded-full bg-black/50 text-white shadow-lg backdrop-blur-sm hover:bg-black/70"
           >
             <XMarkIcon className="h-7 w-7" />
           </button>
@@ -134,7 +146,7 @@ export default function ProductGallery({ images = [] }) {
                   e.stopPropagation();
                   go(-1);
                 }}
-                className="absolute left-3 top-1/2 z-10 flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full bg-white/15 text-white hover:bg-white/25"
+                className="absolute left-3 top-1/2 z-10 hidden h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full bg-black/50 text-white shadow-lg backdrop-blur-sm hover:bg-black/70 sm:flex"
               >
                 <ChevronLeftIcon className="h-7 w-7" />
               </button>
@@ -145,17 +157,20 @@ export default function ProductGallery({ images = [] }) {
                   e.stopPropagation();
                   go(1);
                 }}
-                className="absolute right-3 top-1/2 z-10 flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full bg-white/15 text-white hover:bg-white/25"
+                className="absolute right-3 top-1/2 z-10 hidden h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full bg-black/50 text-white shadow-lg backdrop-blur-sm hover:bg-black/70 sm:flex"
               >
                 <ChevronRightIcon className="h-7 w-7" />
               </button>
             </>
           )}
 
-          {/* La imagen grande: no cierra al tocarla */}
+          {/* La imagen grande: no cierra al tocarla y se cambia con el dedo */}
           <div
             className="relative h-full w-full max-w-4xl"
             onClick={(e) => e.stopPropagation()}
+            onTouchStart={onLbTouchStart}
+            onTouchEnd={onLbTouchEnd}
+            style={{ touchAction: "pan-y" }}
           >
             <Image
               src={active}
@@ -168,7 +183,7 @@ export default function ProductGallery({ images = [] }) {
           </div>
 
           {total > 1 && (
-            <div className="absolute bottom-4 left-1/2 z-10 -translate-x-1/2 rounded-full bg-white/15 px-3 py-1 text-sm text-white">
+            <div className="absolute bottom-4 left-1/2 z-10 -translate-x-1/2 rounded-full bg-black/50 px-3 py-1 text-sm text-white backdrop-blur-sm">
               {activeIndex + 1} / {total}
             </div>
           )}
