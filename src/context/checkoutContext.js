@@ -1,6 +1,12 @@
 "use client";
 
-import { createContext, useContext, useEffect, useState } from "react";
+import {
+  createContext,
+  useContext,
+  useEffect,
+  useRef,
+  useState,
+} from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import useVertical from "@/hooks/useVertical";
 import { useWebsiteContext } from "@/context/websiteContext";
@@ -54,6 +60,36 @@ export function CheckoutProvider({ children, wompiReady = false }) {
   const [showErrors, setShowErrors] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  // "Recordar lo ya escrito": el checkout guarda el formulario en el navegador y
+  // lo restaura en la próxima visita/compra (en ESTE dispositivo). Se hace en
+  // efecto (no en SSR) para no romper la hidratación.
+  const STORAGE_KEY = "pegazo_checkout";
+  const hydrated = useRef(false);
+
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem(STORAGE_KEY);
+      if (raw) {
+        const saved = JSON.parse(raw);
+        if (saved && typeof saved === "object") {
+          setFormData((prev) => ({ ...prev, ...saved }));
+        }
+      }
+    } catch {
+      /* localStorage bloqueado/privado: se ignora */
+    }
+    hydrated.current = true;
+  }, []);
+
+  useEffect(() => {
+    if (!hydrated.current) return;
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(formData));
+    } catch {
+      /* ignore */
+    }
+  }, [formData]);
 
   useEffect(() => {
     const urlMethod = searchParams.get("payment");

@@ -44,6 +44,7 @@ export default function CheckoutForm() {
           label="Correo electrónico"
           name="email"
           type="email"
+          autoComplete="email"
           value={formData.email}
           onChange={handleChange}
           required
@@ -54,6 +55,7 @@ export default function CheckoutForm() {
           <Input
             label="Nombre"
             name="firstName"
+            autoComplete="given-name"
             value={formData.firstName}
             onChange={handleChange}
             required
@@ -62,6 +64,7 @@ export default function CheckoutForm() {
           <Input
             label="Apellido"
             name="lastName"
+            autoComplete="family-name"
             value={formData.lastName}
             onChange={handleChange}
             required
@@ -70,6 +73,8 @@ export default function CheckoutForm() {
           <Input
             label="Teléfono"
             name="phone"
+            type="tel"
+            autoComplete="tel"
             value={formData.phone}
             onChange={handleChange}
             required
@@ -133,6 +138,7 @@ export default function CheckoutForm() {
             <Input
               label="Dirección"
               name="address"
+              autoComplete="address-line1"
               value={formData.address}
               onChange={handleChange}
               required
@@ -142,6 +148,7 @@ export default function CheckoutForm() {
             <Input
               label="Barrio"
               name="neighborhood"
+              autoComplete="address-line2"
               value={formData.neighborhood}
               onChange={handleChange}
               required
@@ -158,6 +165,7 @@ export default function CheckoutForm() {
                   : "Referencias para llegar (opcional)"
               }
               name="addressDetail"
+              autoComplete="address-line3"
               value={formData.addressDetail}
               onChange={handleChange}
               placeholder="Ej: portón verde, casa esquinera, a 300m del colegio"
@@ -234,6 +242,8 @@ export default function CheckoutForm() {
           <Input
             label="Documento (CC / NIT / CE)"
             name="documentNumber"
+            inputMode="numeric"
+            autoComplete="off"
             value={formData.documentNumber}
             onChange={handleChange}
             required
