@@ -3,8 +3,9 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { ChevronLeftIcon, ChevronRightIcon } from "@heroicons/react/24/outline";
 import SkeletonGrid from "../ui/skeletons/skeletonGrid";
-import ProductCardMini from "./productCardMini";
+import ProductCard from "@/components/layout/catalog/catalogSection/productCard";
 import CategoryCard from "./categoryCard";
+import { slugifyCategory } from "@/utils/slugify";
 
 export default function HorizontalSection({
   title,
@@ -104,7 +105,13 @@ export default function HorizontalSection({
                 }
 
                 if (type === "product") {
-                  return <ProductCardMini key={item.id} product={item} />;
+                  return (
+                    <ProductCard
+                      key={item.id}
+                      product={item}
+                      category={slugifyCategory(item.category)}
+                    />
+                  );
                 }
 
                 return null;
@@ -117,8 +124,11 @@ export default function HorizontalSection({
             className="flex gap-4 overflow-x-auto pb-2 scroll-smooth scrollbar-hide px-2 sm:px-16"
           >
             {items.map((item) => (
-              <div key={item.id} className="min-w-60">
-                <ProductCardMini product={item} />
+              <div key={item.id} className="min-w-60 max-w-64">
+                <ProductCard
+                  product={item}
+                  category={slugifyCategory(item.category)}
+                />
               </div>
             ))}
           </div>
