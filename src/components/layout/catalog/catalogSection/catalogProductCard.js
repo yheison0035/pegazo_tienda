@@ -128,22 +128,24 @@ export default function CatalogProductCard({ product, category }) {
   // 100% del tema del dueño.
   return (
     <article className="group flex flex-col overflow-hidden rounded-lg border border-(--border-soft) bg-(--bg-page) transition-all duration-200 hover:-translate-y-0.5 hover:border-(--border-strong) hover:shadow-(--shadow-lg)">
-      {/* Imagen con galería en hover (cambiar fotos sin salir de la lista) */}
-      <div className="relative aspect-square bg-(--bg-page)">
-        <Link href={`/${category}/${product.slug}`} className="block h-full w-full">
+      {/* Imagen con galería en hover (cambiar fotos sin salir de la lista).
+          La imagen va en ABSOLUTO dentro del cuadro cuadrado: el tamaño de la
+          card no depende de la foto, así no "salta" al cambiar de imagen. */}
+      <div className="relative aspect-square overflow-hidden bg-(--bg-page)">
+        <Link href={`/${category}/${product.slug}`} className="absolute inset-0">
           {currentImg ? (
             /* eslint-disable-next-line @next/next/no-img-element */
             <img
               src={currentImg}
               alt={product.name}
-              className={`h-full w-full object-contain p-4 transition-transform duration-300 group-hover:scale-[1.03] ${
+              className={`absolute inset-0 h-full w-full object-contain p-4 transition-transform duration-300 group-hover:scale-[1.03] ${
                 soldOut ? "opacity-45 grayscale" : ""
               }`}
             />
           ) : (
             <ProductImage
               product={product}
-              className="h-full w-full object-contain p-4"
+              className="absolute inset-0 h-full w-full object-contain p-4"
             />
           )}
         </Link>
