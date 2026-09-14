@@ -13,7 +13,7 @@ export default function CartIcon() {
     <>
       <button
         onClick={() => setOpen(true)}
-        className="group relative flex cursor-pointer items-center rounded-full p-2 text-(--text-primary) transition hover:bg-(--bg-soft) hover:text-(--brand-accent)"
+        className="group relative flex cursor-pointer items-center rounded-full p-2 text-(--text-primary) transition hover:bg-(--brand-accent)/10 hover:text-(--brand-accent)"
         aria-label="Carrito de compras"
       >
         <ShoppingCartIcon className="w-6 h-6 transition group-hover:scale-110" />

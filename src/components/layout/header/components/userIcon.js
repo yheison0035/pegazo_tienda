@@ -18,7 +18,7 @@ export default function UserIcon() {
       href="/mi-cuenta"
       aria-label={isAuthenticated ? "Mi cuenta" : "Iniciar sesión"}
       title={isAuthenticated ? "Mi cuenta" : "Iniciar sesión"}
-      className="group flex items-center gap-2 rounded-full p-2 text-(--text-primary) transition hover:bg-(--bg-soft) hover:text-(--brand-accent)"
+      className="group flex items-center gap-2 rounded-full p-2 text-(--text-primary) transition hover:bg-(--brand-accent)/10 hover:text-(--brand-accent)"
     >
       {isAuthenticated ? (
         <span

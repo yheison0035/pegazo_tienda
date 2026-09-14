@@ -393,7 +393,7 @@ export default function TrackOrder() {
         onClick={() => setOpen(true)}
         aria-label="Consultar mi pedido"
         title="Consultar mi pedido"
-        className="group flex items-center gap-2 rounded-full px-2 py-1.5 text-(--text-primary) transition hover:bg-(--bg-soft) hover:text-(--brand-accent)"
+        className="group flex items-center gap-2 rounded-full px-2 py-1.5 text-(--text-primary) transition hover:bg-(--brand-accent)/10 hover:text-(--brand-accent)"
       >
         <TruckIcon className="h-6 w-6 transition group-hover:-translate-x-0.5" />
         <span className="hidden text-sm font-medium lg:inline">Mi pedido</span>
