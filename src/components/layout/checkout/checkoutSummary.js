@@ -1,7 +1,7 @@
 "use client";
 
 import { useCart } from "@/context/cartContext";
-import { calculateShipping } from "@/utils/shipping";
+import { shippingFor } from "@/utils/shipping";
 import { useCheckout } from "@/context/checkoutContext";
 import useVertical from "@/hooks/useVertical";
 import CheckoutCartItems from "./components/checkoutCartItems";
@@ -14,18 +14,22 @@ const DELIVERY_ROW = {
 
 export default function CheckoutSummary() {
   const { items } = useCart();
-  const { isFormValid, setShowErrors, setShowConfirm, deliveryMethod } =
+  const { isFormValid, setShowErrors, setShowConfirm, deliveryMethod, storeShipping } =
     useCheckout();
   const v = useVertical();
 
   const subtotal = items.reduce((sum, i) => sum + i.price * i.quantity, 0);
-  // El envío por transportadora solo aplica a "envío a domicilio".
-  const ship =
-    deliveryMethod === "shipping"
-      ? calculateShipping(subtotal)
-      : { cost: 0, label: "Gratis", message: "" };
-  const { cost, label, message } = ship;
+  // Costo de envío según lo configurado por el dueño (fallback legado).
+  const { cost, label, message } = shippingFor(
+    storeShipping,
+    deliveryMethod,
+    subtotal,
+  );
   const total = subtotal + cost;
+  // Domicilio a domicilio (shipping/local_delivery) muestra su costo; los demás
+  // (pickup/dine_in) muestran su etiqueta sin cobro.
+  const chargesShipping =
+    deliveryMethod === "shipping" || deliveryMethod === "local_delivery";
   const deliveryRowLabel = DELIVERY_ROW[deliveryMethod]; // undefined en dine_in
 
   const { valid } = isFormValid();
@@ -50,11 +54,15 @@ export default function CheckoutSummary() {
         <div className="mt-6 space-y-2 text-sm">
           <Row label="Subtotal" value={`$${subtotal.toLocaleString()}`} />
 
-          {deliveryMethod === "shipping" ? (
+          {chargesShipping ? (
             <div className="flex justify-between">
               <div className="flex flex-col">
-                <span className="text-(--text-muted)">Envío</span>
-                <span className="text-xs text-(--text-muted)">{message}</span>
+                <span className="text-(--text-muted)">
+                  {deliveryMethod === "local_delivery" ? "Domicilio" : "Envío"}
+                </span>
+                {message && (
+                  <span className="text-xs text-(--text-muted)">{message}</span>
+                )}
               </div>
               <span
                 className={`font-medium ${cost === 0 ? "text-(--success)" : ""}`}

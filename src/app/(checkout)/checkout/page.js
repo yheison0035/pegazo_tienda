@@ -11,7 +11,7 @@ import CheckoutSummary from "@/components/layout/checkout/checkoutSummary";
 import CheckoutConfirmModal from "@/components/layout/checkout/components/checkoutConfirmModal";
 import { useCart } from "@/context/cartContext";
 import { useWebsiteContext } from "@/context/websiteContext";
-import { calculateShipping } from "@/utils/shipping";
+import { shippingFor } from "@/utils/shipping";
 import { openWompiCheckout } from "@/lib/wompi/wompiCheckout";
 import { createOrder } from "@/lib/utils/api/routes/checkout";
 import { useToast } from "@/context/toastContext";
@@ -28,6 +28,7 @@ export default function CheckoutPage() {
     deliveryMethod,
     needsAddress,
     prefill,
+    storeShipping,
   } = useCheckout();
 
   const { items, clearCart } = useCart();
@@ -87,10 +88,12 @@ export default function CheckoutPage() {
         (sum, item) => sum + item.price * item.quantity,
         0,
       );
-      // El costo de envío por transportadora solo aplica a "envío a domicilio".
-      // Domicilio local / recoger en tienda / mesa no lo cobran aquí.
-      const { cost: shippingCalc } = calculateShipping(subtotal);
-      const shippingCost = deliveryMethod === "shipping" ? shippingCalc : 0;
+      // Costo de envío según lo configurado por el dueño (fallback legado).
+      const { cost: shippingCost } = shippingFor(
+        storeShipping,
+        deliveryMethod,
+        subtotal,
+      );
 
       const order = await createOrder({
         customer: {

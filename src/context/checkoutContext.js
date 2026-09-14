@@ -3,6 +3,8 @@
 import { createContext, useContext, useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import useVertical from "@/hooks/useVertical";
+import { useWebsiteContext } from "@/context/websiteContext";
+import { availableDeliveryModes } from "@/utils/shipping";
 
 const CheckoutContext = createContext(null);
 
@@ -10,7 +12,11 @@ export function CheckoutProvider({ children, wompiReady = false }) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const vertical = useVertical();
-  const modes = vertical.fulfillment?.length ? vertical.fulfillment : ["shipping"];
+  const { website } = useWebsiteContext();
+  // Envíos configurados por el dueño (si los hay).
+  const storeShipping = website?.company?.storeShipping || null;
+  // Modos de entrega disponibles: los que el dueño activó, o los del vertical.
+  const modes = availableDeliveryModes(storeShipping, vertical.fulfillment);
 
   const [formData, setFormData] = useState({
     email: "",
@@ -166,6 +172,7 @@ export function CheckoutProvider({ children, wompiReady = false }) {
         deliveryMethod,
         setDeliveryMethod,
         deliveryModes: modes,
+        storeShipping,
         needsAddress,
         paymentMethod,
         setPaymentMethod,
