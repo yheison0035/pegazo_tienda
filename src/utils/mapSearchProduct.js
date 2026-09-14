@@ -9,6 +9,7 @@ export function mapSearchProduct(product) {
     stock: product.stock,
     colors: product.colors,
     image: product.image,
+    images: product.images,
     description: product.description,
     category: product.category,
     unit: product.unit,

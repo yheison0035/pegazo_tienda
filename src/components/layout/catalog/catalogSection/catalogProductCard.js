@@ -1,9 +1,12 @@
 "use client";
 
+import { useState } from "react";
 import {
   PlusIcon,
   MinusIcon,
   ShoppingCartIcon,
+  ChevronLeftIcon,
+  ChevronRightIcon,
 } from "@heroicons/react/24/outline";
 import Link from "next/link";
 import ProductImage from "@/components/ui/productImage";
@@ -29,16 +32,32 @@ export default function CatalogProductCard({ product, category }) {
     alreadyInCart,
   } = useProductCartLogic({ ...product, category }, 1);
   const v = useVertical();
+  const [imgIndex, setImgIndex] = useState(0);
 
   if (!ready) return null;
 
-  // Ahorro (para el detalle "Ahorras $X") y etiquetas del producto.
-  const savings =
-    product.oldPrice && product.oldPrice > product.price
-      ? product.oldPrice - product.price
-      : 0;
+  // Etiquetas del producto.
   const lowStock = colorStock > 0 && colorStock <= 5;
-  const productTags = Array.isArray(product.tags) ? product.tags.slice(0, 2) : [];
+  const productTags = Array.isArray(product.tags) ? product.tags.slice(0, 3) : [];
+
+  // Galería para el hover (varias fotos del producto). Acepta images[] o image
+  // (arreglo o string).
+  const gallery = (
+    Array.isArray(product.images) && product.images.length
+      ? product.images
+      : Array.isArray(product.image)
+        ? product.image
+        : product.image
+          ? [product.image]
+          : []
+  ).filter(Boolean);
+  const hasGallery = gallery.length > 1;
+  const currentImg = gallery[Math.min(imgIndex, gallery.length - 1)];
+  const goImg = (e, dir) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setImgIndex((i) => (i + dir + gallery.length) % gallery.length);
+  };
 
   // Layout "menú" (restaurante / comida rápida / cafetería): tarjeta horizontal
   // con foto + nombre + descripción + precio y botón de agregar.
@@ -110,64 +129,94 @@ export default function CatalogProductCard({ product, category }) {
   // 100% del tema del dueño.
   return (
     <article className="group flex flex-col overflow-hidden rounded-xl border border-(--border-soft) bg-(--bg-page) transition-all duration-200 hover:-translate-y-0.5 hover:border-(--border-strong) hover:shadow-(--shadow-lg)">
-      <Link href={`/${category}/${product.slug}`} className="relative block">
-        <div className="relative aspect-square bg-(--bg-page)">
-          <ProductImage
-            product={product}
-            className="h-full w-full object-contain p-4 transition-transform duration-300 group-hover:scale-[1.04]"
-          />
-          {product.discount > 0 && (
-            <span className="absolute left-3 top-3 rounded-full bg-(--danger) px-2 py-1 text-[11px] font-bold text-white shadow-sm sm:text-xs">
-              -{product.discount}%
+      {/* Imagen con galería en hover (cambiar fotos sin salir de la lista) */}
+      <div className="relative aspect-square bg-(--bg-page)">
+        <Link href={`/${category}/${product.slug}`} className="block h-full w-full">
+          {currentImg ? (
+            /* eslint-disable-next-line @next/next/no-img-element */
+            <img
+              src={currentImg}
+              alt={product.name}
+              className="h-full w-full object-contain p-4 transition-transform duration-300 group-hover:scale-[1.03]"
+            />
+          ) : (
+            <ProductImage
+              product={product}
+              className="h-full w-full object-contain p-4"
+            />
+          )}
+        </Link>
+
+        {/* Etiquetas sobre la imagen */}
+        <div className="pointer-events-none absolute left-3 top-3 z-10 flex flex-col items-start gap-1">
+          {lowStock && (
+            <span className="rounded-md bg-(--warning) px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-white shadow-sm">
+              ¡Últimas {colorStock}!
             </span>
           )}
+          {productTags.map((t) => (
+            <span
+              key={t}
+              className="rounded-md bg-(--brand-primary) px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-white shadow-sm"
+            >
+              {t}
+            </span>
+          ))}
         </div>
-      </Link>
+
+        {/* Galería en hover: flechas + puntos */}
+        {hasGallery && (
+          <>
+            <button
+              type="button"
+              aria-label="Foto anterior"
+              onClick={(e) => goImg(e, -1)}
+              className="absolute left-2 top-1/2 z-20 flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-full bg-(--bg-page)/90 text-(--text-primary) opacity-0 shadow transition group-hover:opacity-100 hover:bg-(--bg-page) cursor-pointer"
+            >
+              <ChevronLeftIcon className="h-5 w-5" />
+            </button>
+            <button
+              type="button"
+              aria-label="Foto siguiente"
+              onClick={(e) => goImg(e, 1)}
+              className="absolute right-2 top-1/2 z-20 flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-full bg-(--bg-page)/90 text-(--text-primary) opacity-0 shadow transition group-hover:opacity-100 hover:bg-(--bg-page) cursor-pointer"
+            >
+              <ChevronRightIcon className="h-5 w-5" />
+            </button>
+            <div className="absolute bottom-2 left-1/2 z-20 flex -translate-x-1/2 gap-1 opacity-0 transition group-hover:opacity-100">
+              {gallery.map((_, i) => (
+                <span
+                  key={i}
+                  className={`h-1.5 rounded-full transition-all ${
+                    i === imgIndex ? "w-4 bg-(--cta-primary)" : "w-1.5 bg-(--border-strong)"
+                  }`}
+                />
+              ))}
+            </div>
+          </>
+        )}
+      </div>
 
       <div className="flex flex-1 flex-col gap-1.5 p-3 sm:p-4">
-        {/* Etiquetas */}
-        {(product.discount > 0 || lowStock || productTags.length > 0) && (
-          <div className="flex flex-wrap items-center gap-1.5">
-            {product.discount > 0 && (
-              <span className="rounded-md bg-(--bg-muted) px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wide text-(--cta-primary)">
-                Oferta
-              </span>
-            )}
-            {productTags.map((t) => (
-              <span
-                key={t}
-                className="rounded-md bg-(--bg-muted) px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-(--text-secondary)"
-              >
-                {t}
-              </span>
-            ))}
-            {lowStock && (
-              <span className="rounded-md bg-(--bg-muted) px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-(--warning)">
-                Últimas unidades
-              </span>
-            )}
-          </div>
-        )}
-
-        {/* Precio: Antes (tachado) y Ahora (grande) + ahorro */}
+        {/* Precio: Antes (tachado) + Ahora (grande) + % OFF en verde */}
         {product.oldPrice && product.oldPrice > product.price && (
           <span className="text-xs text-(--text-muted) line-through">
-            Antes ${product.oldPrice.toLocaleString()}
+            ${product.oldPrice.toLocaleString()}
           </span>
         )}
-        <div className="flex items-baseline gap-2">
+        <div className="flex items-center gap-2">
           <span className="text-xl font-bold text-(--text-primary) sm:text-2xl">
             ${product.price.toLocaleString()}
             {isWeight && (
               <span className="text-xs font-medium text-(--text-muted)"> /kg</span>
             )}
           </span>
+          {product.discount > 0 && (
+            <span className="text-sm font-semibold text-(--success)">
+              {product.discount}% OFF
+            </span>
+          )}
         </div>
-        {savings > 0 && (
-          <span className="text-xs font-semibold text-(--success)">
-            Ahorras ${savings.toLocaleString()}
-          </span>
-        )}
 
         {/* Título liviano, 2 líneas */}
         <Link href={`/${category}/${product.slug}`}>
