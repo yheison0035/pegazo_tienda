@@ -2,7 +2,7 @@ import { ExclamationCircleIcon } from "@heroicons/react/24/outline";
 
 export function Input({ label, required, error, helperText, ...props }) {
   return (
-    <div className="flex flex-col">
+    <div className="flex flex-col" data-error={error ? "true" : undefined}>
       <label className="text-sm mb-1 text-(--text-muted)">
         {label} {required && <span className="text-red-500">*</span>}
       </label>

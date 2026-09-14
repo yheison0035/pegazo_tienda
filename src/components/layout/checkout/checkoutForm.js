@@ -149,8 +149,26 @@ export default function CheckoutForm() {
             />
           </div>
 
-          <div className="mt-6 rounded-xl border border-(--border-soft) bg-(--bg-soft) p-4 space-y-3">
-            <div className="flex items-start gap-3">
+          {/* Referencias para llegar: SIEMPRE visible (ayuda al domiciliario) */}
+          <div className="mt-4">
+            <Input
+              label={
+                formData.isHardToAccess
+                  ? "Referencias para llegar"
+                  : "Referencias para llegar (opcional)"
+              }
+              name="addressDetail"
+              value={formData.addressDetail}
+              onChange={handleChange}
+              placeholder="Ej: portón verde, casa esquinera, a 300m del colegio"
+              required={formData.isHardToAccess}
+              error={showErrors && errors.addressDetail}
+              helperText={showErrors ? errors.addressDetail : undefined}
+            />
+          </div>
+
+          <div className="mt-6 rounded-xl border border-(--border-soft) bg-(--bg-soft) p-4">
+            <label className="flex items-start gap-3 cursor-pointer">
               <input
                 type="checkbox"
                 name="isHardToAccess"
@@ -158,27 +176,16 @@ export default function CheckoutForm() {
                 onChange={handleChange}
                 className="mt-1 cursor-pointer"
               />
-              <div className="flex flex-col">
+              <span className="flex flex-col">
                 <span className="text-sm font-medium text-(--text-primary)">
                   Dirección de difícil acceso
                 </span>
                 <span className="text-xs text-(--text-muted)">
-                  Zona rural, finca, vereda o sin nomenclatura
+                  Zona rural, finca, vereda o sin nomenclatura (las referencias
+                  serán obligatorias)
                 </span>
-              </div>
-            </div>
-
-            {formData.isHardToAccess && (
-              <div className="pt-3 border-t border-(--border-soft)">
-                <Input
-                  label="Referencias para llegar"
-                  name="addressDetail"
-                  value={formData.addressDetail}
-                  onChange={handleChange}
-                  placeholder="Ej: portón verde, a 300m del colegio"
-                />
-              </div>
-            )}
+              </span>
+            </label>
           </div>
         </Card>
       )}

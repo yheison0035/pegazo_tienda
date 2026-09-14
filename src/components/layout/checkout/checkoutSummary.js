@@ -12,6 +12,24 @@ const DELIVERY_ROW = {
   pickup: "Recoger en tienda",
 };
 
+// Nombres amables para decirle al cliente QUÉ le falta por completar.
+const FIELD_LABELS = {
+  email: "Correo electrónico",
+  firstName: "Nombre",
+  lastName: "Apellido",
+  phone: "Teléfono",
+  department: "Departamento",
+  city: "Ciudad",
+  address: "Dirección",
+  neighborhood: "Barrio",
+  documentNumber: "Documento",
+  paymentMethod: "Método de pago",
+  billingFirstName: "Nombre de facturación",
+  billingLastName: "Apellido de facturación",
+  billingPhone: "Teléfono de facturación",
+  billingAddress: "Dirección de facturación",
+};
+
 export default function CheckoutSummary() {
   const { items } = useCart();
   const { isFormValid, setShowErrors, setShowConfirm, deliveryMethod, storeShipping } =
@@ -32,11 +50,22 @@ export default function CheckoutSummary() {
     deliveryMethod === "shipping" || deliveryMethod === "local_delivery";
   const deliveryRowLabel = DELIVERY_ROW[deliveryMethod]; // undefined en dine_in
 
-  const { valid } = isFormValid();
+  const { valid, errors } = isFormValid();
+
+  // Lista de campos que faltan por completar (para guiar al cliente). addressDetail
+  // es opcional salvo difícil acceso, así que no bloquea.
+  const missing = Object.keys(errors)
+    .filter((k) => k !== "addressDetail" && FIELD_LABELS[k])
+    .map((k) => FIELD_LABELS[k]);
 
   function handleContinue() {
     if (!valid) {
       setShowErrors(true);
+      // Lleva la vista al primer campo con error.
+      if (typeof document !== "undefined") {
+        const el = document.querySelector("[data-error='true']");
+        el?.scrollIntoView({ behavior: "smooth", block: "center" });
+      }
       return;
     }
     setShowConfirm(true);
@@ -87,19 +116,23 @@ export default function CheckoutSummary() {
           </span>
         </div>
 
+        {/* Guía: qué falta por completar (siempre visible si hay pendientes) */}
+        {!valid && missing.length > 0 && (
+          <div className="mt-4 rounded-lg border border-(--warning) bg-(--warning)/10 p-3 text-xs text-(--text-secondary)">
+            <p className="mb-1 font-semibold text-(--text-primary)">
+              Para continuar completa:
+            </p>
+            <ul className="list-disc space-y-0.5 pl-4">
+              {missing.map((m) => (
+                <li key={m}>{m}</li>
+              ))}
+            </ul>
+          </div>
+        )}
+
         <button
           onClick={handleContinue}
-          disabled={!valid}
-          className={`
-            hidden lg:flex w-full mt-6
-            items-center justify-center gap-2
-            py-3 rounded-lg font-semibold transition cursor-pointer
-            ${
-              valid
-                ? "bg-(--cta-primary) text-(--text-inverted) hover:opacity-90"
-                : "bg-gray-300 text-gray-500 cursor-not-allowed"
-            }
-          `}
+          className="hidden lg:flex w-full mt-4 items-center justify-center gap-2 py-3 rounded-lg font-semibold transition cursor-pointer bg-(--cta-primary) text-(--text-inverted) hover:opacity-90"
         >
           <LockClosedIcon className="w-5 h-5" />
           Continuar con el pago
@@ -111,18 +144,14 @@ export default function CheckoutSummary() {
       </aside>
 
       <div className="lg:hidden fixed bottom-0 left-0 right-0 bg-(--bg-page) border-t border-(--border-soft) p-4 z-40">
+        {!valid && missing.length > 0 && (
+          <p className="mb-2 text-center text-xs text-(--text-muted)">
+            Falta completar: {missing.join(", ")}
+          </p>
+        )}
         <button
           onClick={handleContinue}
-          disabled={!valid}
-          className={`
-            w-full flex items-center justify-center gap-2
-            py-3 rounded-lg font-semibold transition
-            ${
-              valid
-                ? "bg-(--cta-primary) text-(--text-inverted)"
-                : "bg-gray-300 text-gray-500 cursor-not-allowed"
-            }
-          `}
+          className="w-full flex items-center justify-center gap-2 py-3 rounded-lg font-semibold transition bg-(--cta-primary) text-(--text-inverted)"
         >
           <LockClosedIcon className="w-5 h-5" />
           Continuar con el pago
