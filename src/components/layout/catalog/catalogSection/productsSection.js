@@ -26,8 +26,10 @@ export default function ProductsSection({ category, catalog }) {
   // En verticales de menú (restaurante/comida) el catálogo se lista en filas
   // anchas (1-2 columnas); en retail sigue en grilla densa.
   const isMenu = v.layout === "menu";
+  // Menú: filas ANCHAS a todo el ancho del catálogo (una sola columna) para que
+  // cada card respire; solo en pantallas muy grandes pasa a 2 columnas.
   const gridClass = isMenu
-    ? "grid grid-cols-1 lg:grid-cols-2 gap-4"
+    ? "grid grid-cols-1 2xl:grid-cols-2 gap-4 2xl:gap-5"
     : "grid grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4 gap-4 sm:gap-5";
 
   const sentinelRef = useRef(null);

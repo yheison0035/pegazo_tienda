@@ -3,6 +3,7 @@
 import { useState } from "react";
 import {
   PlusIcon,
+  MinusIcon,
   ChevronLeftIcon,
   ChevronRightIcon,
 } from "@heroicons/react/24/outline";
@@ -22,6 +23,8 @@ export default function CatalogProductCard({ product, category }) {
     qty,
     error,
     handleAddToCart,
+    incrementQty,
+    decrementQty,
     alreadyInCart,
   } = useProductCartLogic({ ...product, category }, 1);
   const v = useVertical();
@@ -59,62 +62,133 @@ export default function CatalogProductCard({ product, category }) {
   };
 
   // Layout "menú" (restaurante / comida rápida / cafetería): tarjeta horizontal
-  // con foto + nombre + descripción + precio y botón de agregar.
+  // AMPLIA y elegante (fila completa). Foto grande a la izquierda, información
+  // con aire y, a la derecha, precio + selector de cantidad y botón de agregar.
   if (v.layout === "menu") {
     return (
-      <article className="group flex gap-3 sm:gap-4 rounded-2xl border border-(--border-soft) bg-(--bg-page) p-3 transition-all hover:shadow-(--shadow-lg)">
+      <article className="group flex gap-4 rounded-2xl border border-(--border-soft) bg-(--bg-page) p-4 transition-all hover:border-(--border-strong) hover:shadow-(--shadow-lg) sm:gap-5 sm:p-5">
         <Link
           href={`/${category}/${product.slug}`}
-          className="relative h-24 w-24 flex-none overflow-hidden rounded-xl bg-(--bg-soft) sm:h-28 sm:w-28"
+          className="relative h-28 w-28 flex-none overflow-hidden rounded-xl bg-(--bg-soft) sm:h-36 sm:w-36 md:h-40 md:w-40"
         >
           <ProductImage
             product={product}
-            className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
+            className={`h-full w-full object-cover transition-transform duration-300 group-hover:scale-105 ${
+              soldOut ? "opacity-45 grayscale" : ""
+            }`}
           />
-          {product.discount > 0 && (
-            <span className="absolute left-1.5 top-1.5 rounded-full bg-(--danger) px-1.5 py-0.5 text-[10px] font-bold text-white">
+          {!soldOut && product.discount > 0 && (
+            <span className="absolute left-2 top-2 rounded-full bg-(--danger) px-2 py-0.5 text-[10px] font-bold text-white shadow-sm">
               -{product.discount}%
+            </span>
+          )}
+          {soldOut && (
+            <span className="absolute left-2 top-2 rounded-md bg-(--text-muted) px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-white shadow-sm">
+              Agotado
             </span>
           )}
         </Link>
 
         <div className="flex min-w-0 flex-1 flex-col">
+          {/* Nombre */}
           <Link href={`/${category}/${product.slug}`}>
-            <h3 className="line-clamp-1 font-semibold text-(--text-primary) hover:underline">
+            <h3 className="line-clamp-1 text-base font-semibold text-(--text-primary) transition group-hover:text-(--brand-accent) sm:text-lg">
               {product.name}
             </h3>
           </Link>
+
+          {/* Rating + etiquetas */}
+          <div className="mt-1 flex flex-wrap items-center gap-2">
+            {product.rating ? (
+              <span className="flex items-center gap-1 text-xs text-(--text-muted)">
+                <StarSolid className="h-3.5 w-3.5 text-(--brand-accent)" />
+                <span className="font-medium text-(--text-secondary)">
+                  {product.rating}
+                </span>
+              </span>
+            ) : null}
+            {productTags.map((t) => (
+              <span
+                key={t}
+                className="rounded-full bg-(--bg-muted) px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-(--brand-primary)"
+              >
+                {t}
+              </span>
+            ))}
+          </div>
+
+          {/* Descripción */}
           {product.description && (
-            <p className="mt-0.5 line-clamp-2 text-xs text-(--text-muted)">
+            <p className="mt-1.5 line-clamp-2 text-sm text-(--text-muted)">
               {product.description}
             </p>
           )}
 
-          <div className="mt-auto flex items-center justify-between gap-2 pt-2">
-            <div className="flex items-end gap-2">
-              <span className="text-base font-bold text-(--cta-primary)">
-                ${product.price.toLocaleString()}
-                {isWeight && (
-                  <span className="text-xs font-medium text-(--text-muted)">
-                    {" "}
-                    /kg
-                  </span>
-                )}
-              </span>
-              {product.oldPrice && (
+          {/* Precio + acciones */}
+          <div className="mt-auto flex flex-wrap items-end justify-between gap-3 pt-3">
+            <div className="flex flex-col">
+              {product.oldPrice && product.oldPrice > product.price && (
                 <span className="text-xs line-through text-(--text-muted)">
                   ${product.oldPrice.toLocaleString()}
                 </span>
               )}
+              <div className="flex items-center gap-2">
+                <span className="text-xl font-bold text-(--text-primary)">
+                  ${product.price.toLocaleString()}
+                  {isWeight && (
+                    <span className="text-xs font-medium text-(--text-muted)">
+                      {" "}
+                      /kg
+                    </span>
+                  )}
+                </span>
+                {product.discount > 0 && (
+                  <span className="rounded bg-(--success) px-1.5 py-0.5 text-xs font-bold text-white">
+                    {product.discount}% OFF
+                  </span>
+                )}
+              </div>
             </div>
-            <button
-              onClick={handleAddToCart}
-              className="flex flex-none items-center gap-1 rounded-lg bg-(--cta-primary) px-3 py-1.5 text-sm font-semibold text-white transition hover:bg-(--cta-primary-hover) cursor-pointer"
-            >
-              <PlusIcon className="h-4 w-4" />
-              {alreadyInCart ? `✔ ${qty}` : v.addToCart}
-            </button>
+
+            {soldOut ? (
+              <span className="rounded-lg bg-(--bg-muted) px-4 py-2 text-sm font-semibold text-(--text-muted)">
+                Agotado
+              </span>
+            ) : (
+              <div className="flex items-center gap-2">
+                {/* Selector de cantidad */}
+                <div className="flex items-center rounded-lg border border-(--border-soft)">
+                  <button
+                    type="button"
+                    aria-label="Quitar uno"
+                    onClick={decrementQty}
+                    className="flex h-9 w-9 items-center justify-center text-(--text-secondary) transition hover:bg-(--bg-soft) cursor-pointer"
+                  >
+                    <MinusIcon className="h-4 w-4" />
+                  </button>
+                  <span className="min-w-8 text-center text-sm font-semibold">
+                    {qty}
+                  </span>
+                  <button
+                    type="button"
+                    aria-label="Agregar uno"
+                    onClick={incrementQty}
+                    className="flex h-9 w-9 items-center justify-center text-(--text-secondary) transition hover:bg-(--bg-soft) cursor-pointer"
+                  >
+                    <PlusIcon className="h-4 w-4" />
+                  </button>
+                </div>
+                <button
+                  type="button"
+                  onClick={handleAddToCart}
+                  className="flex flex-none items-center gap-1 rounded-lg bg-(--cta-primary) px-4 py-2 text-sm font-semibold text-(--text-inverted) transition hover:bg-(--cta-primary-hover) cursor-pointer"
+                >
+                  {alreadyInCart ? "✔ Agregado" : v.addToCart}
+                </button>
+              </div>
+            )}
           </div>
+
           {error && (
             <p className="mt-1 text-xs font-medium text-(--danger)">{error}</p>
           )}
