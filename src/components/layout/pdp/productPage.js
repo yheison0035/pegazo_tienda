@@ -36,6 +36,22 @@ export default function ProductPage({ category, productSlug, initialProduct = nu
     fetchProductBySlug();
   }, [fetchProductBySlug, initialProduct]);
 
+  // Tiempo real: revalida stock/precio del producto al volver a la pestaña,
+  // al enfocar la ventana y cada 30s (silencioso).
+  useEffect(() => {
+    const refresh = () => {
+      if (document.visibilityState === "visible") fetchProductBySlug();
+    };
+    const interval = setInterval(refresh, 30000);
+    window.addEventListener("focus", refresh);
+    document.addEventListener("visibilitychange", refresh);
+    return () => {
+      clearInterval(interval);
+      window.removeEventListener("focus", refresh);
+      document.removeEventListener("visibilitychange", refresh);
+    };
+  }, [fetchProductBySlug]);
+
   if (!product) return null;
 
   return (

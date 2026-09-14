@@ -25,22 +25,27 @@ export function useCatalog(catalogParams, initialCatalog = null) {
   // lo que pida el usuario con los filtros.
   const usedInitial = useRef(Boolean(initialCatalog));
 
-  const load = useCallback(async () => {
-    setLoading(true);
+  // silent = refresco en segundo plano (stock/precios en tiempo real) sin mostrar
+  // el esqueleto de carga.
+  const load = useCallback(
+    async (silent = false) => {
+      if (!silent) setLoading(true);
 
-    try {
-      const res = await getCatalogProducts(catalogParams);
+      try {
+        const res = await getCatalogProducts(catalogParams);
 
-      if (res?.success) {
-        setProducts(res.data);
-        setFilters(res.filters);
+        if (res?.success) {
+          setProducts(res.data);
+          setFilters(res.filters);
+        }
+      } catch (error) {
+        console.error("No se pudo cargar el catálogo", error);
+      } finally {
+        if (!silent) setLoading(false);
       }
-    } catch (error) {
-      console.error("No se pudo cargar el catálogo", error);
-    } finally {
-      setLoading(false);
-    }
-  }, [catalogParams, getCatalogProducts]);
+    },
+    [catalogParams, getCatalogProducts],
+  );
 
   useEffect(() => {
     if (usedInitial.current) {
@@ -49,6 +54,26 @@ export function useCatalog(catalogParams, initialCatalog = null) {
     }
 
     load();
+  }, [load]);
+
+  // Tiempo real: revalida stock/precios al volver a la pestaña, al enfocar la
+  // ventana y cada 30s. Así, si algo se vende en el POS o en línea, la tienda lo
+  // refleja sin recargar. Silencioso (no parpadea).
+  useEffect(() => {
+    const refresh = () => {
+      if (document.visibilityState === "visible") load(true);
+    };
+    const onVisible = () => {
+      if (document.visibilityState === "visible") load(true);
+    };
+    const interval = setInterval(refresh, 30000);
+    window.addEventListener("focus", refresh);
+    document.addEventListener("visibilitychange", onVisible);
+    return () => {
+      clearInterval(interval);
+      window.removeEventListener("focus", refresh);
+      document.removeEventListener("visibilitychange", onVisible);
+    };
   }, [load]);
 
   return {
