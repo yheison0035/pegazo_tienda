@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { ChevronLeftIcon, ChevronRightIcon } from "@heroicons/react/24/outline";
 import { useWebsiteContext } from "@/context/websiteContext";
@@ -21,6 +21,7 @@ export default function HeroSection() {
   );
 
   const [current, setCurrent] = useState(0);
+  const touchStartX = useRef(null);
 
   // Auto-cambio pausado (9s) y solo si hay más de un banner.
   useEffect(() => {
@@ -36,12 +37,28 @@ export default function HeroSection() {
     const banner = banners[Math.min(current, total - 1)];
     const go = (dir) => setCurrent((i) => (i + dir + total) % total);
 
+    // Deslizar con el dedo en móvil (sin flechas).
+    const onTouchStart = (e) => {
+      touchStartX.current = e.touches[0].clientX;
+    };
+    const onTouchEnd = (e) => {
+      if (touchStartX.current == null || total < 2) return;
+      const dx = e.changedTouches[0].clientX - touchStartX.current;
+      if (Math.abs(dx) > 40) go(dx < 0 ? 1 : -1);
+      touchStartX.current = null;
+    };
+
     return (
       <section className="relative w-full overflow-hidden bg-(--bg-muted)">
-        {/* Banda a todo el ancho. En MÓVIL es más baja y la imagen LLENA la banda
+        {/* Banda a todo el ancho. En MÓVIL es más alta y la imagen LLENA la banda
             (object-cover) para que se vea bien ajustada; en desktop se mantiene la
             imagen completa (object-contain) sobre el fondo desenfocado. */}
-        <div className="relative h-40 w-full sm:h-56 md:h-[26rem] lg:h-[30rem] xl:h-[34rem]">
+        <div
+          className="relative h-52 w-full sm:h-64 md:h-[26rem] lg:h-[30rem] xl:h-[34rem]"
+          onTouchStart={onTouchStart}
+          onTouchEnd={onTouchEnd}
+          style={{ touchAction: "pan-y" }}
+        >
           {/* Fondo desenfocado (solo aporta en desktop, detrás de object-contain). */}
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
@@ -83,14 +100,15 @@ export default function HeroSection() {
             </div>
           )}
 
-          {/* Flechas */}
+          {/* Flechas: solo en tablet/desktop (en móvil se desliza con el dedo,
+              así no tapan el texto del banner). */}
           {total > 1 && (
             <>
               <button
                 type="button"
                 aria-label="Banner anterior"
                 onClick={() => go(-1)}
-                className="absolute left-3 top-1/2 z-30 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full bg-(--bg-page)/85 text-(--text-primary) shadow transition hover:bg-(--bg-page)"
+                className="absolute left-3 top-1/2 z-30 hidden h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full bg-(--bg-page)/85 text-(--text-primary) shadow transition hover:bg-(--bg-page) sm:flex"
               >
                 <ChevronLeftIcon className="h-6 w-6" />
               </button>
@@ -98,7 +116,7 @@ export default function HeroSection() {
                 type="button"
                 aria-label="Banner siguiente"
                 onClick={() => go(1)}
-                className="absolute right-3 top-1/2 z-30 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full bg-(--bg-page)/85 text-(--text-primary) shadow transition hover:bg-(--bg-page)"
+                className="absolute right-3 top-1/2 z-30 hidden h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full bg-(--bg-page)/85 text-(--text-primary) shadow transition hover:bg-(--bg-page) sm:flex"
               >
                 <ChevronRightIcon className="h-6 w-6" />
               </button>
