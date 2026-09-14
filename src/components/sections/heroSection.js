@@ -63,12 +63,12 @@ export default function HeroSection() {
           {(banner.title || banner.subtitle || banner.buttonText) && (
             <div className="absolute inset-0 z-20 flex flex-col justify-center gap-3 bg-gradient-to-r from-black/60 via-black/20 to-transparent px-4 sm:px-8 md:px-16">
               {banner.title && (
-                <h2 className="max-w-xl text-xl font-bold text-white drop-shadow sm:text-2xl md:text-4xl">
+                <h2 className="max-w-xl text-xl font-bold text-(--text-inverted) drop-shadow sm:text-2xl md:text-4xl">
                   {banner.title}
                 </h2>
               )}
               {banner.subtitle && (
-                <p className="max-w-lg text-xs text-white/90 drop-shadow sm:text-sm md:text-base">
+                <p className="max-w-lg text-xs text-(--text-inverted)/90 drop-shadow sm:text-sm md:text-base">
                   {banner.subtitle}
                 </p>
               )}
@@ -90,7 +90,7 @@ export default function HeroSection() {
                 type="button"
                 aria-label="Banner anterior"
                 onClick={() => go(-1)}
-                className="absolute left-3 top-1/2 z-30 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full bg-white/80 text-gray-800 shadow transition hover:bg-white"
+                className="absolute left-3 top-1/2 z-30 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full bg-(--bg-page)/85 text-(--text-primary) shadow transition hover:bg-(--bg-page)"
               >
                 <ChevronLeftIcon className="h-6 w-6" />
               </button>
@@ -98,7 +98,7 @@ export default function HeroSection() {
                 type="button"
                 aria-label="Banner siguiente"
                 onClick={() => go(1)}
-                className="absolute right-3 top-1/2 z-30 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full bg-white/80 text-gray-800 shadow transition hover:bg-white"
+                className="absolute right-3 top-1/2 z-30 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full bg-(--bg-page)/85 text-(--text-primary) shadow transition hover:bg-(--bg-page)"
               >
                 <ChevronRightIcon className="h-6 w-6" />
               </button>
@@ -115,7 +115,9 @@ export default function HeroSection() {
                   aria-label={`Ir al banner ${index + 1}`}
                   onClick={() => setCurrent(index)}
                   className={`h-2 rounded-full transition-all ${
-                    index === current ? "w-6 bg-white" : "w-2 bg-white/60"
+                    index === current
+                      ? "w-6 bg-(--cta-primary)"
+                      : "w-2 bg-(--bg-page)/70"
                   }`}
                 />
               ))}
