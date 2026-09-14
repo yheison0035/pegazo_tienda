@@ -67,18 +67,18 @@ export default function CartItem({ item }) {
         )}
 
         <div className="flex items-center gap-2 mt-1 flex-wrap">
-          {item.oldPrice && (
+          {item.oldPrice && item.oldPrice > item.price && (
             <span className="text-xs text-(--text-muted) line-through">
               ${item.oldPrice.toLocaleString()}
             </span>
           )}
 
-          <span className="text-sm font-bold text-(--cta-primary)">
+          <span className="text-sm font-bold text-(--text-primary)">
             ${item.price.toLocaleString()}
           </span>
 
           {item.discount > 0 && (
-            <span className="text-[10px] font-semibold bg-red-100 text-(--danger) px-2 py-0.5 rounded-full">
+            <span className="rounded-md bg-(--bg-muted) px-1.5 py-0.5 text-[10px] font-bold text-(--cta-primary)">
               -{item.discount}%
             </span>
           )}

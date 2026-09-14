@@ -2,6 +2,7 @@
 
 import useProductCartLogic from "@/hooks/useProductCartLogic";
 import useVertical from "@/hooks/useVertical";
+import { useWebsiteContext } from "@/context/websiteContext";
 import { getColorHexByName } from "@/utils/getColor";
 import {
   PlusIcon,
@@ -11,6 +12,7 @@ import {
   ShieldCheckIcon,
 } from "@heroicons/react/24/outline";
 
+// Umbral legado de envío gratis (solo si la empresa NO configuró envíos).
 const FREE_SHIPPING_FROM = 100000;
 
 export default function ProductInfo({ product, category }) {
@@ -35,10 +37,20 @@ export default function ProductInfo({ product, category }) {
     alreadyInCart,
   } = useProductCartLogic({ ...product, category }, 1);
   const v = useVertical();
+  const { website } = useWebsiteContext();
 
   if (!ready) return null;
 
-  const freeShipping = product.price * qty >= FREE_SHIPPING_FROM;
+  // Umbral de envío gratis: el configurado por el dueño (envío nacional) o el
+  // legado si no configuró envíos.
+  const shipCfg = website?.company?.storeShipping?.shipping;
+  const freeFrom = shipCfg?.freeFrom ?? FREE_SHIPPING_FROM;
+  const freeShipping = freeFrom != null && product.price * qty >= freeFrom;
+
+  const savings =
+    product.oldPrice && product.oldPrice > product.price
+      ? product.oldPrice - product.price
+      : 0;
 
   return (
     <div
@@ -56,36 +68,53 @@ export default function ProductInfo({ product, category }) {
         {product.name}
       </h1>
 
-      <div className="flex items-end gap-3 flex-wrap">
-        <span className="text-2xl sm:text-3xl font-bold text-(--cta-primary)">
-          ${product.price.toLocaleString()}
-          {isWeight && (
-            <span className="text-base font-medium text-(--text-muted)">
-              {" "}
-              / kg
+      {/* Etiquetas */}
+      {(product.discount > 0 || (colorStock > 0 && colorStock <= 5)) && (
+        <div className="flex flex-wrap items-center gap-1.5">
+          {product.discount > 0 && (
+            <span className="rounded-md bg-(--bg-muted) px-2 py-0.5 text-[11px] font-bold uppercase tracking-wide text-(--cta-primary)">
+              Oferta -{product.discount}%
             </span>
           )}
-        </span>
+          {colorStock > 0 && colorStock <= 5 && (
+            <span className="rounded-md bg-(--bg-muted) px-2 py-0.5 text-[11px] font-semibold uppercase tracking-wide text-(--warning)">
+              Últimas unidades
+            </span>
+          )}
+        </div>
+      )}
 
-        {product.oldPrice && (
-          <>
-            <span className="line-through text-sm text-(--text-muted)">
-              ${product.oldPrice.toLocaleString()}
-            </span>
-            <span className="text-sm font-semibold text-(--danger)">
-              {product.discount}% OFF
-            </span>
-          </>
+      {/* Precio: Antes (tachado) y Ahora (grande) + ahorro */}
+      <div className="space-y-0.5">
+        {product.oldPrice && product.oldPrice > product.price && (
+          <span className="block text-sm text-(--text-muted) line-through">
+            Antes ${product.oldPrice.toLocaleString()}
+          </span>
+        )}
+        <div className="flex items-end gap-3 flex-wrap">
+          <span className="text-2xl sm:text-3xl font-bold text-(--text-primary)">
+            ${product.price.toLocaleString()}
+            {isWeight && (
+              <span className="text-base font-medium text-(--text-muted)"> / kg</span>
+            )}
+          </span>
+        </div>
+        {savings > 0 && (
+          <span className="block text-sm font-semibold text-(--success)">
+            Ahorras ${savings.toLocaleString()}
+          </span>
         )}
       </div>
 
-      {v.fulfillment.includes("shipping") && (
+      {v.fulfillment.includes("shipping") && freeFrom != null && (
         <div className="flex items-center gap-2 text-sm">
           <TruckIcon className="w-5 h-5" />
           <span
             className={freeShipping ? "text-(--success)" : "text-(--text-muted)"}
           >
-            {freeShipping ? "Envío gratis" : "Envío gratis desde $100.000"}
+            {freeShipping
+              ? "Envío gratis"
+              : `Envío gratis desde $${freeFrom.toLocaleString()}`}
           </span>
         </div>
       )}
