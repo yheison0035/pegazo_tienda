@@ -61,21 +61,21 @@ export default function HeroSection() {
           />
 
           {(banner.title || banner.subtitle || banner.buttonText) && (
-            <div className="absolute inset-0 z-20 flex flex-col justify-center gap-3 bg-gradient-to-r from-black/60 via-black/20 to-transparent px-4 sm:px-8 md:px-16">
+            <div className="absolute inset-0 z-20 flex flex-col justify-center gap-1.5 bg-gradient-to-r from-black/60 via-black/20 to-transparent px-4 sm:gap-3 sm:px-8 md:px-16">
               {banner.title && (
-                <h2 className="max-w-xl text-xl font-bold text-(--text-inverted) drop-shadow sm:text-2xl md:text-4xl">
+                <h2 className="max-w-[16rem] text-base font-bold leading-tight text-(--text-inverted) drop-shadow sm:max-w-xl sm:text-2xl md:text-4xl">
                   {banner.title}
                 </h2>
               )}
               {banner.subtitle && (
-                <p className="max-w-lg text-xs text-(--text-inverted)/90 drop-shadow sm:text-sm md:text-base">
+                <p className="hidden max-w-lg text-xs text-(--text-inverted)/90 drop-shadow sm:block sm:text-sm md:text-base">
                   {banner.subtitle}
                 </p>
               )}
               {banner.buttonText && banner.buttonUrl && (
                 <Link
                   href={banner.buttonUrl}
-                  className="w-fit rounded-(--radius-md) bg-(--cta-primary) px-5 py-2.5 text-sm font-medium text-(--text-inverted) transition hover:opacity-90"
+                  className="w-fit rounded-(--radius-md) bg-(--cta-primary) px-3 py-1.5 text-xs font-medium text-(--text-inverted) transition hover:opacity-90 sm:px-5 sm:py-2.5 sm:text-sm"
                 >
                   {banner.buttonText}
                 </Link>
