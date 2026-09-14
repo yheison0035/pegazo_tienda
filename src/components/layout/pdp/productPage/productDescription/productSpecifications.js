@@ -1,5 +1,7 @@
 "use client";
 
+import RichHtml from "@/components/ui/richHtml";
+
 export default function ProductSpecifications({ specifications }) {
   return (
     <div>
@@ -19,7 +21,7 @@ export default function ProductSpecifications({ specifications }) {
                   {s.key}
                 </td>
                 <td className="w-1/2 px-4 py-3 text-(--text-primary)">
-                  {s.value}
+                  <RichHtml html={s.value} />
                 </td>
               </tr>
             ))}

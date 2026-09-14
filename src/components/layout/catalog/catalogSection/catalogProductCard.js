@@ -14,6 +14,7 @@ import useProductCartLogic from "@/hooks/useProductCartLogic";
 import useVertical from "@/hooks/useVertical";
 import { useWebsiteContext } from "@/context/websiteContext";
 import { isOutOfStock } from "@/utils/stock";
+import { stripHtml } from "@/utils/sanitizeHtml";
 
 export default function CatalogProductCard({ product, category }) {
   const {
@@ -117,10 +118,10 @@ export default function CatalogProductCard({ product, category }) {
             ))}
           </div>
 
-          {/* Descripción */}
+          {/* Descripción (texto plano en el preview del menú) */}
           {product.description && (
             <p className="mt-1.5 line-clamp-2 text-sm text-(--text-muted)">
-              {product.description}
+              {stripHtml(product.description)}
             </p>
           )}
 

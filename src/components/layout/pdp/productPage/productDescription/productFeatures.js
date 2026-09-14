@@ -1,5 +1,7 @@
 "use client";
 
+import RichHtml from "@/components/ui/richHtml";
+
 export default function ProductFeatures({ features }) {
   return (
     <div>
@@ -21,7 +23,10 @@ export default function ProductFeatures({ features }) {
             "
           >
             <span className="text-(--brand-accent) font-bold">•</span>
-            <span className="text-(--text-secondary)">{f.title}</span>
+            <RichHtml
+              html={f.title}
+              className="text-(--text-secondary)"
+            />
           </div>
         ))}
       </div>
