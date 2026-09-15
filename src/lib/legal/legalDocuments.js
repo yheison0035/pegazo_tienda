@@ -132,6 +132,17 @@ export const legalDocuments = [
         ],
       },
       {
+        heading: "Uso de cookies",
+        content: [
+          "Una cookie es un pequeño archivo que se guarda en tu dispositivo cuando visitas el sitio. Usamos cookies propias y de terceros para el funcionamiento del sitio y para mejorar tu experiencia.",
+          "Cookies necesarias: son imprescindibles para que el sitio funcione (carrito de compras, sesión, seguridad y preferencias del checkout). No requieren tu consentimiento y no se pueden desactivar.",
+          "Cookies analíticas: nos permiten entender de forma anónima cómo se usa el sitio (páginas visitadas, rendimiento) para mejorarlo. Solo se activan si las autorizas.",
+          "Cookies de marketing: permiten mostrarte contenido y promociones más relevantes. Solo se activan si las autorizas.",
+          "Al ingresar por primera vez te mostramos un aviso para Aceptar todas, Rechazar las no esenciales o Configurar por categoría. No instalamos cookies analíticas ni de marketing sin tu consentimiento previo.",
+          "Puedes cambiar o retirar tu consentimiento en cualquier momento desde el enlace \"Preferencias de cookies\" en el pie de página, o borrando las cookies desde la configuración de tu navegador.",
+        ],
+      },
+      {
         heading: "Derechos del titular",
         content: [
           "Acceder, actualizar y rectificar sus datos personales.",
