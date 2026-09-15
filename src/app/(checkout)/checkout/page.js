@@ -11,6 +11,7 @@ import CheckoutSummary from "@/components/layout/checkout/checkoutSummary";
 import CheckoutConfirmModal from "@/components/layout/checkout/components/checkoutConfirmModal";
 import { useCart } from "@/context/cartContext";
 import { useWebsiteContext } from "@/context/websiteContext";
+import { getCompanyName } from "@/lib/website";
 import { shippingFor } from "@/utils/shipping";
 import { openWompiCheckout } from "@/lib/wompi/wompiCheckout";
 import { createOrder } from "@/lib/utils/api/routes/checkout";
@@ -129,6 +130,45 @@ export default function CheckoutPage() {
         deliveryMethod,
         notes: formData.notes || undefined,
       });
+
+      // Resumen de la compra para la pantalla de confirmación y el comprobante.
+      // Vive en la sesión del navegador (sobrevive el ida y vuelta a Wompi).
+      try {
+        const summary = {
+          code: order.orderCode,
+          createdAt: new Date().toISOString(),
+          customerName: `${formData.firstName} ${formData.lastName}`.trim(),
+          email: formData.email,
+          phone: formData.phone,
+          document: formData.documentNumber || "",
+          address: needsAddress
+            ? [
+                formData.address,
+                formData.neighborhood,
+                formData.city,
+                formData.department,
+              ]
+                .filter(Boolean)
+                .join(", ")
+            : "",
+          deliveryMethod,
+          paymentMethod:
+            paymentMethod === "online" ? "Pago en línea" : "Contra entrega",
+          items: items.map((i) => ({
+            name: i.name,
+            quantity: i.quantity,
+            price: i.price,
+            color: i.color || null,
+          })),
+          subtotal,
+          shippingCost,
+          total: subtotal + shippingCost,
+          store: getCompanyName(website),
+        };
+        sessionStorage.setItem("pegazo_last_order", JSON.stringify(summary));
+      } catch {
+        /* sesión no disponible: la confirmación básica igual funciona */
+      }
 
       if (paymentMethod === "online") {
         // El pedido ya existe: se paga con su código como referencia.
