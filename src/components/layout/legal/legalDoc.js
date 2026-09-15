@@ -73,9 +73,10 @@ export default function LegalDoc({ slug, title: initialTitle, html: initialHtml 
   // Vista normal (visitantes).
   return (
     <>
-      <h1 className="mb-8 text-3xl font-bold text-(--text-primary)">{title}</h1>
+      <h1 className="mb-2 text-3xl font-bold text-(--text-primary)">{title}</h1>
+      <div className="mb-8 h-1 w-16 rounded-full bg-(--brand-accent)" />
       {html ? (
-        <div className="text-base leading-relaxed text-(--text-secondary)">
+        <div className="legal-prose text-(--text-secondary)">
           <RichHtml html={html} />
         </div>
       ) : (
@@ -83,6 +84,19 @@ export default function LegalDoc({ slug, title: initialTitle, html: initialHtml 
           Este documento aún no tiene contenido publicado.
         </p>
       )}
+      <style>{`
+        .legal-prose { font-size: 1rem; line-height: 1.75; }
+        .legal-prose h3 {
+          font-size: 1.15rem; font-weight: 700; color: var(--text-primary);
+          margin: 1.75rem 0 .5rem; padding-top: 1rem;
+          border-top: 1px solid var(--border-soft);
+        }
+        .legal-prose h3:first-child { border-top: 0; padding-top: 0; margin-top: 0; }
+        .legal-prose p { margin: .5rem 0; }
+        .legal-prose ul, .legal-prose ol { margin: .5rem 0 .5rem 0; padding-left: 1.4rem; }
+        .legal-prose li { margin: .25rem 0; }
+        .legal-prose a { color: var(--brand-accent); text-decoration: underline; }
+      `}</style>
     </>
   );
 }

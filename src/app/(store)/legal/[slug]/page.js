@@ -1,4 +1,5 @@
 import { notFound } from "next/navigation";
+import Link from "next/link";
 import { fetchFromApi, getSiteUrl, getWebsiteConfig } from "@/lib/website.server";
 import { siteName } from "@/lib/seo";
 import Container from "@/components/layout/container";
@@ -6,15 +7,15 @@ import Footer from "@/components/layout/footer";
 import Header from "@/components/layout/header";
 import LegalDoc from "@/components/layout/legal/legalDoc";
 
-async function loadDoc(slug) {
+async function loadDocs() {
   const res = await fetchFromApi("/website/legal");
-  const docs = res?.data || [];
-  return docs.find((d) => d.slug === slug) || null;
+  return res?.data || [];
 }
 
 export default async function LegalPage({ params }) {
   const { slug } = await params;
-  const doc = await loadDoc(slug);
+  const docs = await loadDocs();
+  const doc = docs.find((d) => d.slug === slug);
   if (!doc) return notFound();
 
   return (
@@ -22,7 +23,37 @@ export default async function LegalPage({ params }) {
       <Header />
       <Container>
         <main className="px-4 py-10 md:pt-49 pt-70">
-          <LegalDoc slug={doc.slug} title={doc.title} html={doc.html} />
+          <div className="mx-auto grid w-full max-w-6xl gap-8 lg:grid-cols-[260px_1fr]">
+            {/* Navegación entre documentos legales */}
+            <aside className="lg:sticky lg:top-28 lg:h-fit">
+              <p className="mb-3 text-xs font-semibold uppercase tracking-wide text-(--text-muted)">
+                Información legal
+              </p>
+              <nav className="flex flex-col gap-1">
+                {docs.map((d) => {
+                  const active = d.slug === slug;
+                  return (
+                    <Link
+                      key={d.slug}
+                      href={`/legal/${d.slug}`}
+                      className={`rounded-lg px-3 py-2 text-sm transition ${
+                        active
+                          ? "bg-(--brand-accent)/12 font-semibold text-(--brand-accent)"
+                          : "text-(--text-secondary) hover:bg-(--bg-soft)"
+                      }`}
+                    >
+                      {d.title}
+                    </Link>
+                  );
+                })}
+              </nav>
+            </aside>
+
+            {/* Documento */}
+            <article className="min-w-0 rounded-2xl border border-(--border-soft) bg-(--bg-page) p-6 shadow-sm sm:p-8">
+              <LegalDoc slug={doc.slug} title={doc.title} html={doc.html} />
+            </article>
+          </div>
         </main>
       </Container>
       <Footer />
@@ -33,11 +64,12 @@ export default async function LegalPage({ params }) {
 export async function generateMetadata({ params }) {
   const { slug } = await params;
 
-  const [siteUrl, website, doc] = await Promise.all([
+  const [siteUrl, website, docs] = await Promise.all([
     getSiteUrl(),
     getWebsiteConfig(),
-    loadDoc(slug),
+    loadDocs(),
   ]);
+  const doc = docs.find((d) => d.slug === slug) || null;
 
   const name = siteName(website);
 
