@@ -24,22 +24,26 @@ export default async function LegalPage({ params }) {
       <Container>
         <main className="px-4 py-10 md:pt-49 pt-70">
           <div className="mx-auto grid w-full max-w-6xl gap-8 lg:grid-cols-[260px_1fr]">
-            {/* Navegación entre documentos legales */}
-            <aside className="lg:sticky lg:top-28 lg:h-fit">
+            {/* Navegación entre documentos legales: chips horizontales en móvil,
+                lista vertical fija en desktop. */}
+            <aside
+              className="lg:sticky lg:h-fit"
+              style={{ top: "calc(var(--edit-bar-h, 0px) + 10.5rem)" }}
+            >
               <p className="mb-3 text-xs font-semibold uppercase tracking-wide text-(--text-muted)">
                 Información legal
               </p>
-              <nav className="flex flex-col gap-1">
+              <nav className="flex gap-2 overflow-x-auto pb-2 lg:flex-col lg:gap-1 lg:overflow-visible lg:pb-0">
                 {docs.map((d) => {
                   const active = d.slug === slug;
                   return (
                     <Link
                       key={d.slug}
                       href={`/legal/${d.slug}`}
-                      className={`rounded-lg px-3 py-2 text-sm transition ${
+                      className={`whitespace-nowrap rounded-lg px-3 py-2 text-sm transition lg:whitespace-normal ${
                         active
                           ? "bg-(--brand-accent)/12 font-semibold text-(--brand-accent)"
-                          : "text-(--text-secondary) hover:bg-(--bg-soft)"
+                          : "bg-(--bg-soft) text-(--text-secondary) hover:bg-(--bg-muted) lg:bg-transparent lg:hover:bg-(--bg-soft)"
                       }`}
                     >
                       {d.title}
