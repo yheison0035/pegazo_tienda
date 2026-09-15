@@ -25,12 +25,19 @@ export default function DepartaCiudad({
     }
   }, [formData?.department]);
 
+  // Limpia la ciudad SOLO si no pertenece al departamento seleccionado. Así, al
+  // restaurar datos guardados (departamento + ciudad válidos) NO se borra la
+  // ciudad; solo se limpia cuando el usuario cambia a otro departamento.
   useEffect(() => {
-    if (formData.city) {
-      handleChange({
-        target: { name: "city", value: "" },
-      });
+    if (!formData.department || !formData.city) return;
+    const dep = locations.find(
+      (d) => normalizeText(d.department) === normalizeText(formData.department),
+    );
+    const cities = dep ? dep.city.map((c) => normalizeText(c)) : [];
+    if (!cities.includes(normalizeText(formData.city))) {
+      handleChange({ target: { name: "city", value: "" } });
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [formData.department]);
 
   const departmentOptions = locations.map((d) => ({

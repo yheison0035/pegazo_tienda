@@ -30,11 +30,11 @@ export default function CheckoutResultClient() {
           /\/$/,
           "",
         );
-        const res = await fetch(
-          `${API_URL}/wompi/transaction/${transactionId}`,
-        );
+        // /wompi/confirm consulta el estado REAL en Wompi y, si está aprobado,
+        // finaliza el pedido (respaldo por si el webhook no llegó).
+        const res = await fetch(`${API_URL}/wompi/confirm/${transactionId}`);
         const data = await res.json();
-        const s = data?.data?.status;
+        const s = data?.status || data?.data?.status;
         if (cancelled) return;
         if (s === "APPROVED") return setStatus("approved");
         if (s === "DECLINED" || s === "ERROR" || s === "VOIDED")
