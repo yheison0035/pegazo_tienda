@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { openCookiePreferences } from "@/components/ui/cookieConsent";
 import {
@@ -11,12 +12,14 @@ import {
   TruckIcon,
   ChatBubbleLeftRightIcon,
   ClockIcon,
+  CreditCardIcon,
 } from "@heroicons/react/24/outline";
 import { FaWhatsapp, FaInstagram, FaTiktok, FaFacebookF } from "react-icons/fa";
 import { useWebsiteContext } from "@/context/websiteContext";
 
 import {
   getCompanyName,
+  getLogo,
   getPhone,
   getEmail,
   getWhatsapp,
@@ -30,256 +33,256 @@ import {
   getDescription,
 } from "@/lib/website";
 
+const LEGAL_LINKS = [
+  { href: "/legal/terminos-y-condiciones", label: "Términos y condiciones" },
+  { href: "/legal/politicas-de-privacidad", label: "Políticas de privacidad" },
+  { href: "/legal/autorizacion-de-datos", label: "Autorización de datos" },
+  { href: "/legal/derecho-de-retracto", label: "Derecho de retracto" },
+  { href: "/legal/politica-de-envios", label: "Política de envíos" },
+  { href: "/legal/cambios-y-devoluciones", label: "Cambios y devoluciones" },
+  { href: "/legal/garantias", label: "Política de garantías" },
+  { href: "/legal/condiciones-de-promociones", label: "Condiciones de promociones" },
+];
+
+const TRUST = [
+  {
+    Icon: ShieldCheckIcon,
+    title: "Compra 100% segura",
+    sub: "Tus datos están protegidos",
+  },
+  {
+    Icon: TruckIcon,
+    title: "Envíos a todo Colombia",
+    sub: "Con transportadoras aliadas",
+  },
+  {
+    Icon: CreditCardIcon,
+    title: "Pago seguro",
+    sub: "Tarjeta, PSE, Nequi y contra entrega",
+  },
+  {
+    Icon: ChatBubbleLeftRightIcon,
+    title: "Atención por WhatsApp",
+    sub: "Te acompañamos en tu compra",
+  },
+];
+
 export default function Footer() {
   const pathname = usePathname();
-
   const { website } = useWebsiteContext();
 
   const companyName = getCompanyName(website);
+  const logo = getLogo(website);
   const phone = getPhone(website);
   const email = getEmail(website);
   const whatsapp = getWhatsapp(website);
   const address = getAddress(website);
   const schedule = getSchedule(website);
-
   const facebook = getFacebook(website);
   const instagram = getInstagram(website);
   const tiktok = getTikTok(website);
-
   const footerText = getFooterText(website);
   const description = getDescription(website);
   const whatsappDigits = getWhatsappDigits(website);
 
-  // Solo se muestran las redes que la empresa configuró.
   const socials = [
     { icon: <FaInstagram />, href: instagram, label: "Instagram" },
     { icon: <FaTiktok />, href: tiktok, label: "TikTok" },
     { icon: <FaFacebookF />, href: facebook, label: "Facebook" },
-  ].filter((social) => Boolean(social.href));
+  ].filter((s) => Boolean(s.href));
 
   const year = new Date().getFullYear();
-
   const isActive = (href) => pathname === href;
+  const handleNavigate = () =>
+    window.scrollTo({ top: 0, behavior: "smooth" });
 
-  const handleNavigate = () => {
-    // asegura que al cambiar de documento legal,
-    // el usuario empiece a leer desde arriba
-    window.scrollTo({
-      top: 0,
-      behavior: "smooth",
-    });
-  };
+  const linkCls = (href) =>
+    `transition ${
+      isActive(href)
+        ? "text-(--brand-accent) font-medium"
+        : "text-(--text-inverted)/70 hover:text-(--brand-accent)"
+    }`;
 
   return (
     <footer className="bg-(--bg-dark) text-(--text-inverted)">
-      <div className="max-w-7xl mx-auto px-4 py-16">
-        <div className="grid grid-cols-1 gap-12 sm:grid-cols-2 lg:grid-cols-4">
-          <div>
-            <h3 className="text-lg font-semibold mb-4">Nuestra empresa</h3>
+      {/* Franja de confianza */}
+      <div className="border-b border-white/10">
+        <div className="mx-auto grid max-w-7xl grid-cols-2 gap-x-6 gap-y-5 px-4 py-6 lg:grid-cols-4">
+          {TRUST.map(({ Icon, title, sub }) => (
+            <div key={title} className="flex items-center gap-3">
+              <span className="flex h-10 w-10 flex-none items-center justify-center rounded-full bg-(--brand-accent)/15 text-(--brand-accent)">
+                <Icon className="h-5 w-5" />
+              </span>
+              <div className="min-w-0">
+                <p className="text-sm font-semibold leading-tight">{title}</p>
+                <p className="truncate text-xs text-(--text-inverted)/60">
+                  {sub}
+                </p>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
 
-            <p className="text-sm text-(--text-muted) mb-4 leading-relaxed">
+      {/* Columnas */}
+      <div className="mx-auto max-w-7xl px-4 py-12">
+        <div className="grid grid-cols-1 gap-10 sm:grid-cols-2 lg:grid-cols-4">
+          {/* Marca */}
+          <div>
+            <div className="mb-4 flex items-center gap-3">
+              {logo && (
+                <Image
+                  src={logo}
+                  alt={companyName}
+                  width={48}
+                  height={48}
+                  unoptimized
+                  className="h-12 w-12 rounded-lg object-contain"
+                />
+              )}
+              <span className="text-lg font-bold">{companyName}</span>
+            </div>
+            <p className="mb-5 text-sm leading-relaxed text-(--text-inverted)/70">
               {description}
             </p>
+            {socials.length > 0 && (
+              <nav aria-label="Redes sociales" className="flex gap-3">
+                {socials.map((s) => (
+                  <Link
+                    key={s.label}
+                    href={s.href}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    aria-label={s.label}
+                    className="flex h-10 w-10 items-center justify-center rounded-full bg-white/10 text-(--text-inverted) transition hover:bg-(--brand-accent) hover:text-(--bg-dark)"
+                  >
+                    {s.icon}
+                  </Link>
+                ))}
+              </nav>
+            )}
+          </div>
 
-            <ul className="space-y-2 text-sm text-(--text-muted)">
+          {/* La empresa */}
+          <div>
+            <h3 className="mb-4 text-xs font-semibold uppercase tracking-wider text-(--text-inverted)/50">
+              La empresa
+            </h3>
+            <ul className="space-y-2.5 text-sm">
               <li>
                 <Link
                   href="/legal/quienes-somos"
                   onClick={handleNavigate}
-                  className={`
-                    transition
-                    ${
-                      isActive("/legal/quienes-somos")
-                        ? "text-(--brand-accent) font-medium underline"
-                        : "hover:text-(--brand-accent)"
-                    }
-                  `}
+                  className={linkCls("/legal/quienes-somos")}
                 >
                   Quiénes somos
                 </Link>
               </li>
+              <li>
+                <Link
+                  href="https://sedeelectronica.sic.gov.co/"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-(--text-inverted)/70 transition hover:text-(--brand-accent)"
+                >
+                  Superintendencia (SIC)
+                </Link>
+              </li>
+              <li>
+                <button
+                  type="button"
+                  onClick={openCookiePreferences}
+                  className="text-left text-(--text-inverted)/70 transition hover:text-(--brand-accent)"
+                >
+                  Preferencias de cookies
+                </button>
+              </li>
             </ul>
           </div>
 
+          {/* Información legal */}
           <div>
-            <h3 className="text-lg font-semibold mb-4">Información legal</h3>
-
+            <h3 className="mb-4 text-xs font-semibold uppercase tracking-wider text-(--text-inverted)/50">
+              Información legal
+            </h3>
             <nav aria-label="Información legal">
-              <ul className="space-y-2 text-sm text-(--text-muted)">
-                {[
-                  {
-                    href: "/legal/terminos-y-condiciones",
-                    label: "Términos y condiciones",
-                  },
-                  {
-                    href: "/legal/politicas-de-privacidad",
-                    label: "Políticas de privacidad",
-                  },
-                  {
-                    href: "/legal/autorizacion-de-datos",
-                    label: "Autorización de datos",
-                  },
-                  {
-                    href: "/legal/derecho-de-retracto",
-                    label: "Derecho de retracto",
-                  },
-                  {
-                    href: "/legal/politica-de-envios",
-                    label: "Política de envíos",
-                  },
-                  {
-                    href: "/legal/cambios-y-devoluciones",
-                    label: "Cambios y devoluciones",
-                  },
-                  { href: "/legal/garantias", label: "Política de garantías" },
-                  {
-                    href: "/legal/condiciones-de-promociones",
-                    label: "Condiciones de promociones",
-                  },
-                ].map((item) => (
+              <ul className="space-y-2.5 text-sm">
+                {LEGAL_LINKS.map((item) => (
                   <li key={item.href}>
                     <Link
                       href={item.href}
                       onClick={handleNavigate}
-                      className={`
-                        transition
-                        ${
-                          isActive(item.href)
-                            ? "text-(--brand-accent) font-medium underline"
-                            : "hover:text-(--brand-accent)"
-                        }
-                      `}
+                      className={linkCls(item.href)}
                     >
                       {item.label}
                     </Link>
                   </li>
                 ))}
-                <li>
-                  <Link
-                    href="https://sedeelectronica.sic.gov.co/"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="hover:text-(--brand-accent)"
-                  >
-                    Superintendencia de Industria y Comercio (SIC)
-                  </Link>
-                </li>
-                <li>
-                  <button
-                    type="button"
-                    onClick={openCookiePreferences}
-                    className="text-left hover:text-(--brand-accent)"
-                  >
-                    Preferencias de cookies
-                  </button>
-                </li>
               </ul>
             </nav>
           </div>
 
+          {/* Atención al cliente */}
           <div>
-            <h3 className="text-lg font-semibold mb-4">Contáctenos</h3>
-
-            <address className="not-italic space-y-3 text-sm text-(--text-muted)">
+            <h3 className="mb-4 text-xs font-semibold uppercase tracking-wider text-(--text-inverted)/50">
+              Atención al cliente
+            </h3>
+            <address className="not-italic space-y-3 text-sm text-(--text-inverted)/70">
               {whatsappDigits && (
-                <p className="flex items-center gap-3">
+                <Link
+                  href={`https://wa.me/${whatsappDigits}`}
+                  target="_blank"
+                  className="flex items-center gap-3 transition hover:text-(--brand-accent)"
+                >
                   <FaWhatsapp className="text-(--brand-accent)" />
-                  <Link
-                    href={`https://wa.me/${whatsappDigits}`}
-                    className="hover:text-(--brand-accent)"
-                    target="_blank"
-                  >
-                    {whatsapp}
-                  </Link>
-                </p>
+                  {whatsapp}
+                </Link>
               )}
-
               {email && (
-                <p className="flex items-center gap-3">
-                  <EnvelopeIcon className="w-4 h-4 text-(--brand-accent)" />
-                  <Link
-                    href={`mailto:${email}`}
-                    className="hover:text-(--brand-accent)"
-                  >
-                    {email}
-                  </Link>
-                </p>
+                <Link
+                  href={`mailto:${email}`}
+                  className="flex items-center gap-3 transition hover:text-(--brand-accent)"
+                >
+                  <EnvelopeIcon className="h-4 w-4 flex-none text-(--brand-accent)" />
+                  <span className="truncate">{email}</span>
+                </Link>
               )}
-
               {phone && (
                 <p className="flex items-center gap-3">
-                  <PhoneIcon className="w-4 h-4 text-(--brand-accent)" />
+                  <PhoneIcon className="h-4 w-4 flex-none text-(--brand-accent)" />
                   {phone}
                 </p>
               )}
-
               {address && (
-                <p className="flex items-center gap-3">
-                  <MapPinIcon className="w-4 h-4 text-(--brand-accent)" />
+                <p className="flex items-start gap-3">
+                  <MapPinIcon className="mt-0.5 h-4 w-4 flex-none text-(--brand-accent)" />
                   {address}
                 </p>
               )}
-
               {schedule && (
                 <p className="flex items-center gap-3">
-                  <ClockIcon className="w-4 h-4 text-(--brand-accent)" />
+                  <ClockIcon className="h-4 w-4 flex-none text-(--brand-accent)" />
                   {schedule}
                 </p>
               )}
             </address>
           </div>
-
-          <div>
-            <h3 className="text-lg font-semibold mb-4">Síguenos</h3>
-
-            <nav aria-label="Redes sociales" className="flex gap-4 mb-6">
-              {socials.map((social) => (
-                <Link
-                  key={social.label}
-                  href={social.href}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  aria-label={social.label}
-                  className="
-                    w-10 h-10 rounded-full
-                    flex items-center justify-center
-                    bg-(--brand-secondary)
-                    text-(--text-inverted)
-                    hover:bg-(--brand-accent)
-                    hover:text-(--bg-dark)
-                    transition
-                  "
-                >
-                  {social.icon}
-                </Link>
-              ))}
-            </nav>
-
-            <ul className="space-y-2 text-sm text-(--text-muted)">
-              <li className="flex items-center gap-2">
-                <ShieldCheckIcon className="w-4 h-4 text-(--brand-accent)" />
-                Compra segura
-              </li>
-              <li className="flex items-center gap-2">
-                <TruckIcon className="w-4 h-4 text-(--brand-accent)" />
-                Envíos a todo Colombia
-              </li>
-              <li className="flex items-center gap-2">
-                <ChatBubbleLeftRightIcon className="w-4 h-4 text-(--brand-accent)" />
-                Atención por WhatsApp
-              </li>
-            </ul>
-          </div>
         </div>
       </div>
 
-      <div className="border-t border-gray-300/20" />
-
-      <div className="max-w-7xl mx-auto px-4 py-6 text-center text-sm text-(--text-muted)">
-        © {year} <strong>{companyName}</strong>. Todos los derechos reservados.
-        <p className="mt-2 text-xs">{footerText}</p>
+      {/* Barra inferior */}
+      <div className="border-t border-white/10">
+        <div className="mx-auto flex max-w-7xl flex-col items-center justify-between gap-3 px-4 py-5 text-center sm:flex-row sm:text-left">
+          <p className="text-xs text-(--text-inverted)/60">
+            © {year} <strong className="text-(--text-inverted)">{companyName}</strong>. Todos los derechos reservados.
+            {footerText ? ` · ${footerText}` : ""}
+          </p>
+          <div className="flex items-center gap-2 text-xs text-(--text-inverted)/60">
+            <CreditCardIcon className="h-4 w-4 text-(--brand-accent)" />
+            Tarjeta · PSE · Nequi · Contra entrega
+          </div>
+        </div>
       </div>
-
     </footer>
   );
 }
