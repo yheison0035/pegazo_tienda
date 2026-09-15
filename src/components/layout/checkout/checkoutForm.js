@@ -1,10 +1,13 @@
 "use client";
 
+import { useState } from "react";
+import { MapPinIcon, PencilSquareIcon } from "@heroicons/react/24/outline";
 import { useCheckout } from "@/context/checkoutContext";
 import PaymentMethods from "./paymentMethods";
 import { Input } from "./components/input";
 import Card from "./components/card";
 import ShippingLocationBlock from "./components/shippingLocationBlock";
+import AddressBuilder from "./components/addressBuilder";
 
 const MODE_LABEL = {
   shipping: "Envío a domicilio",
@@ -22,12 +25,14 @@ const MODE_HINT = {
 export default function CheckoutForm() {
   const {
     formData,
+    setFormData,
     handleChange,
+    handleBlur,
+    fieldError,
     isLocked,
     setIsLocked,
     paymentMethod,
     setPaymentMethod,
-    showErrors,
     isFormValid,
     deliveryMethod,
     setDeliveryMethod,
@@ -36,6 +41,8 @@ export default function CheckoutForm() {
   } = useCheckout();
 
   const { errors } = isFormValid();
+  const err = (name) => fieldError(name, errors);
+  const [addrOpen, setAddrOpen] = useState(false);
 
   return (
     <section className="lg:col-span-2 space-y-6">
@@ -47,9 +54,10 @@ export default function CheckoutForm() {
           autoComplete="email"
           value={formData.email}
           onChange={handleChange}
+          onBlur={handleBlur}
           required
-          error={showErrors && errors.email}
-          helperText={errors.email}
+          error={err("email")}
+          helperText={err("email")}
         />
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
           <Input
@@ -58,8 +66,9 @@ export default function CheckoutForm() {
             autoComplete="given-name"
             value={formData.firstName}
             onChange={handleChange}
+            onBlur={handleBlur}
             required
-            error={showErrors && errors.firstName}
+            error={err("firstName")}
           />
           <Input
             label="Apellido"
@@ -67,8 +76,9 @@ export default function CheckoutForm() {
             autoComplete="family-name"
             value={formData.lastName}
             onChange={handleChange}
+            onBlur={handleBlur}
             required
-            error={showErrors && errors.lastName}
+            error={err("lastName")}
           />
           <Input
             label="Teléfono"
@@ -77,8 +87,10 @@ export default function CheckoutForm() {
             autoComplete="tel"
             value={formData.phone}
             onChange={handleChange}
+            onBlur={handleBlur}
             required
-            error={showErrors && errors.phone}
+            error={err("phone")}
+            helperText={err("phone")}
           />
         </div>
       </Card>
@@ -130,73 +142,77 @@ export default function CheckoutForm() {
             formData={formData}
             handleChange={handleChange}
             isLocked={isLocked}
-            errors={showErrors ? errors : {}}
+            errors={{ department: err("department"), city: err("city") }}
             required={true}
           />
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-6">
-            <Input
-              label="Dirección"
-              name="address"
-              autoComplete="address-line1"
-              value={formData.address}
-              onChange={handleChange}
-              required
-              placeholder="Ej: Calle 45 #12-34"
-              error={showErrors && errors.address}
-            />
+          {/* Dirección: se ARMA con el asistente (evita direcciones mal escritas) */}
+          <div className="mt-6">
+            <label className="mb-1 block text-sm text-(--text-muted)">
+              Dirección <span className="text-red-500">*</span>
+            </label>
+            <button
+              type="button"
+              onClick={() => setAddrOpen(true)}
+              className={`flex w-full items-center gap-3 rounded-lg border px-4 py-3 text-left transition ${
+                err("address")
+                  ? "border-(--danger)"
+                  : "border-(--border-soft) hover:border-(--brand-accent)"
+              }`}
+            >
+              <MapPinIcon className="h-5 w-5 flex-none text-(--brand-accent)" />
+              {formData.address ? (
+                <span className="flex-1 font-medium text-(--text-primary)">
+                  {formData.address}
+                </span>
+              ) : (
+                <span className="flex-1 text-(--text-muted)">
+                  Toca para armar tu dirección
+                </span>
+              )}
+              <PencilSquareIcon className="h-5 w-5 flex-none text-(--text-muted)" />
+            </button>
+            {err("address") && (
+              <p className="mt-1 text-xs text-(--danger)">
+                {err("address")}
+              </p>
+            )}
+          </div>
+
+          <div className="mt-4">
             <Input
               label="Barrio"
               name="neighborhood"
               autoComplete="address-line2"
               value={formData.neighborhood}
               onChange={handleChange}
+              onBlur={handleBlur}
               required
-              error={showErrors && errors.neighborhood}
+              error={err("neighborhood")}
             />
           </div>
 
           {/* Referencias para llegar: SIEMPRE visible (ayuda al domiciliario) */}
           <div className="mt-4">
             <Input
-              label={
-                formData.isHardToAccess
-                  ? "Referencias para llegar"
-                  : "Referencias para llegar (opcional)"
-              }
+              label="Referencias para llegar (opcional)"
               name="addressDetail"
               autoComplete="address-line3"
               value={formData.addressDetail}
               onChange={handleChange}
-              placeholder="Ej: portón verde, casa esquinera, a 300m del colegio"
-              required={formData.isHardToAccess}
-              error={showErrors && errors.addressDetail}
-              helperText={showErrors ? errors.addressDetail : undefined}
+              placeholder="Ej: PORTÓN VERDE, CASA ESQUINERA, A 300M DEL COLEGIO"
             />
-          </div>
-
-          <div className="mt-6 rounded-xl border border-(--border-soft) bg-(--bg-soft) p-4">
-            <label className="flex items-start gap-3 cursor-pointer">
-              <input
-                type="checkbox"
-                name="isHardToAccess"
-                checked={formData.isHardToAccess}
-                onChange={handleChange}
-                className="mt-1 cursor-pointer"
-              />
-              <span className="flex flex-col">
-                <span className="text-sm font-medium text-(--text-primary)">
-                  Dirección de difícil acceso
-                </span>
-                <span className="text-xs text-(--text-muted)">
-                  Zona rural, finca, vereda o sin nomenclatura (las referencias
-                  serán obligatorias)
-                </span>
-              </span>
-            </label>
           </div>
         </Card>
       )}
+
+      <AddressBuilder
+        open={addrOpen}
+        onClose={() => setAddrOpen(false)}
+        onConfirm={(value) =>
+          setFormData((prev) => ({ ...prev, address: value }))
+        }
+      />
 
       {/* Instrucciones / mesa: para recoger en tienda o consumo en el lugar */}
       {!needsAddress && (
@@ -246,8 +262,9 @@ export default function CheckoutForm() {
             autoComplete="off"
             value={formData.documentNumber}
             onChange={handleChange}
+            onBlur={handleBlur}
             required
-            error={showErrors && errors.documentNumber}
+            error={err("documentNumber")}
           />
 
           {!formData.billingSameAsShipping && (
@@ -257,28 +274,36 @@ export default function CheckoutForm() {
                 name="billingFirstName"
                 value={formData.billingFirstName}
                 onChange={handleChange}
+                onBlur={handleBlur}
                 required
+                error={err("billingFirstName")}
               />
               <Input
                 label="Apellido"
                 name="billingLastName"
                 value={formData.billingLastName}
                 onChange={handleChange}
+                onBlur={handleBlur}
                 required
+                error={err("billingLastName")}
               />
               <Input
                 label="Teléfono"
                 name="billingPhone"
                 value={formData.billingPhone}
                 onChange={handleChange}
+                onBlur={handleBlur}
                 required
+                error={err("billingPhone")}
               />
               <Input
                 label="Dirección"
                 name="billingAddress"
                 value={formData.billingAddress}
                 onChange={handleChange}
+                onBlur={handleBlur}
                 required
+                error={err("billingAddress")}
               />
             </div>
           )}

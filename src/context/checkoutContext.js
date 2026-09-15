@@ -55,9 +55,12 @@ export function CheckoutProvider({ children, wompiReady = false }) {
   const needsAddress =
     deliveryMethod === "shipping" || deliveryMethod === "local_delivery";
 
-  const [paymentMethod, setPaymentMethod] = useState(null);
+  // Pago en línea seleccionado por defecto.
+  const [paymentMethod, setPaymentMethod] = useState("online");
   const [isLocked, setIsLocked] = useState(false);
   const [showErrors, setShowErrors] = useState(false);
+  // Campos "tocados" para validar en tiempo real (sin esperar al botón).
+  const [touched, setTouched] = useState({});
   const [showConfirm, setShowConfirm] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -106,13 +109,36 @@ export function CheckoutProvider({ children, wompiReady = false }) {
     }
   }, [paymentMethod]);
 
+  // Campos que se guardan SIEMPRE en MAYÚSCULA (nombres y dirección).
+  const UPPER_FIELDS = new Set([
+    "firstName",
+    "lastName",
+    "address",
+    "neighborhood",
+    "addressDetail",
+    "billingFirstName",
+    "billingLastName",
+    "billingAddress",
+  ]);
+
   function handleChange(e) {
     const { name, value, type, checked } = e.target;
+    let v = type === "checkbox" ? checked : value;
+    if (typeof v === "string" && UPPER_FIELDS.has(name)) v = v.toUpperCase();
 
-    setFormData((prev) => ({
-      ...prev,
-      [name]: type === "checkbox" ? checked : value,
-    }));
+    setFormData((prev) => ({ ...prev, [name]: v }));
+    // Validación en tiempo real: al escribir, el campo queda "tocado".
+    setTouched((prev) => (prev[name] ? prev : { ...prev, [name]: true }));
+  }
+
+  function handleBlur(e) {
+    const name = e?.target?.name;
+    if (name) setTouched((prev) => (prev[name] ? prev : { ...prev, [name]: true }));
+  }
+
+  // ¿Se debe mostrar el error de este campo? (tras tocarlo o intentar enviar)
+  function fieldError(name, errors) {
+    return (touched[name] || showErrors) && errors?.[name] ? errors[name] : "";
   }
 
   // Rellena datos del cliente logueado SOLO en los campos que estén vacíos, para
@@ -148,10 +174,6 @@ export function CheckoutProvider({ children, wompiReady = false }) {
       errors.phone = "Este campo es obligatorio";
     } else if (!/^\d{7,10}$/.test(formData.phone)) {
       errors.phone = "Ingresa un teléfono válido";
-    }
-
-    if (needsAddress && formData.isHardToAccess && !formData.addressDetail) {
-      errors.addressDetail = "Agrega una referencia para facilitar la entrega";
     }
 
     // Campos siempre requeridos + los de dirección solo si el modo la necesita.
@@ -203,7 +225,11 @@ export function CheckoutProvider({ children, wompiReady = false }) {
     <CheckoutContext.Provider
       value={{
         formData,
+        setFormData,
         handleChange,
+        handleBlur,
+        fieldError,
+        touched,
         prefill,
         deliveryMethod,
         setDeliveryMethod,
