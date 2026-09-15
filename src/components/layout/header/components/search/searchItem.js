@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import ProductImage from "@/components/ui/productImage";
+import FavoriteButton from "@/components/ui/favoriteButton";
 import { isOutOfStock } from "@/utils/stock";
 
 // Fila de resultado del buscador: limpia y 100% clickeable (lleva al producto).
@@ -55,6 +56,9 @@ export default function SearchItem({ product }) {
           )}
         </div>
       </div>
+
+      {/* Favorito */}
+      <FavoriteButton product={product} variant="plain" />
 
       {/* Flecha */}
       <span className="flex-none text-(--text-muted) transition group-hover:translate-x-0.5 group-hover:text-(--brand-accent)">

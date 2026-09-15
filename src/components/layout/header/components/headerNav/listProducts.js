@@ -2,6 +2,7 @@ import { slugifyCategory } from "@/utils/slugify";
 import { stripHtml } from "@/utils/sanitizeHtml";
 import { isOutOfStock } from "@/utils/stock";
 import ProductImage from "@/components/ui/productImage";
+import FavoriteButton from "@/components/ui/favoriteButton";
 import { formatText } from "@/utils/textFormat";
 import Link from "next/link";
 
@@ -79,6 +80,7 @@ export default function ListProductHeader({
                       soldOut ? "opacity-45 grayscale" : ""
                     }`}
                   />
+                  <FavoriteButton product={product} />
                   {!soldOut && product.discount > 0 && (
                     <span className="absolute left-2 top-2 rounded-md bg-(--success) px-1.5 py-0.5 text-[10px] font-bold text-white shadow-sm">
                       {product.discount}% OFF

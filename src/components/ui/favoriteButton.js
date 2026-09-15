@@ -26,11 +26,13 @@ export default function FavoriteButton({ product, variant = "overlay", className
   };
 
   const base =
-    "group/fav z-30 flex items-center justify-center rounded-full transition cursor-pointer";
+    "group/fav z-30 flex flex-none items-center justify-center rounded-full transition cursor-pointer";
   const sizing =
     variant === "inline"
       ? "h-11 w-11 border border-(--border-soft) bg-(--bg-page) hover:border-(--danger) shadow-sm"
-      : "absolute right-2 top-2 h-9 w-9 bg-(--bg-page)/90 shadow hover:bg-(--bg-page)";
+      : variant === "plain"
+        ? "h-9 w-9 hover:bg-(--bg-muted)"
+        : "absolute right-2 top-2 h-9 w-9 bg-(--bg-page)/90 shadow hover:bg-(--bg-page)";
 
   const Icon = active ? HeartSolid : HeartOutline;
 

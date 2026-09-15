@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import ProductImage from "@/components/ui/productImage";
+import FavoriteButton from "@/components/ui/favoriteButton";
 import { slugifyCategory } from "@/utils/slugify";
 
 export default function ProductCardMini({ product }) {
@@ -23,6 +24,7 @@ export default function ProductCardMini({ product }) {
               -{product.discount}%
             </span>
           )}
+          <FavoriteButton product={product} />
         </div>
 
         <div className="flex flex-1 flex-col gap-1 p-3">
