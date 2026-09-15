@@ -1,10 +1,11 @@
 import { slugifyCategory } from "@/utils/slugify";
 import { stripHtml } from "@/utils/sanitizeHtml";
+import { isOutOfStock } from "@/utils/stock";
 import ProductImage from "@/components/ui/productImage";
 import { formatText } from "@/utils/textFormat";
 import Link from "next/link";
 
-const MENU_WIDTH = 640;
+const MENU_WIDTH = 720;
 const EDGE_PADDING = 16;
 
 export default function ListProductHeader({
@@ -13,20 +14,21 @@ export default function ListProductHeader({
   hoveredCat,
   closeTimer,
 }) {
-  const megaMenuStyle = hoveredCat
-    ? (() => {
-        const rawLeft =
-          hoveredCat.rect.left + hoveredCat.rect.width / 2 - MENU_WIDTH / 2;
+  const catSlug = slugifyCategory(hoveredCat.cat.name);
+  const desc = stripHtml(hoveredCat.cat.description);
 
-        const maxLeft = window.innerWidth - MENU_WIDTH - EDGE_PADDING;
+  const megaMenuStyle = (() => {
+    const rawLeft =
+      hoveredCat.rect.left + hoveredCat.rect.width / 2 - MENU_WIDTH / 2;
+    const maxLeft = window.innerWidth - MENU_WIDTH - EDGE_PADDING;
+    return {
+      top: hoveredCat.rect.bottom + 10,
+      left: Math.max(EDGE_PADDING, Math.min(rawLeft, maxLeft)),
+      width: MENU_WIDTH,
+    };
+  })();
 
-        return {
-          top: hoveredCat.rect.bottom + 10,
-          left: Math.max(EDGE_PADDING, Math.min(rawLeft, maxLeft)),
-          width: MENU_WIDTH,
-        };
-      })()
-    : {};
+  const products = hoveredCat.cat.products?.slice(0, 4) || [];
 
   return (
     <div
@@ -38,135 +40,85 @@ export default function ListProductHeader({
         setIsHoveringMega(false);
         setHoveredCat(null);
       }}
-      className="
-        hidden md:block fixed
-        bg-(--bg-page)
-        shadow-(--shadow-lg)
-        rounded-xl
-        z-9999
-        mt-1
-        p-6
-      "
+      className="mega-pop fixed z-9999 hidden overflow-hidden rounded-2xl border border-(--border-soft) bg-(--bg-page) shadow-(--shadow-lg) ring-1 ring-black/5 md:block"
       style={megaMenuStyle}
     >
-      <div className="mb-4">
-        <p className="text-lg font-semibold text-(--text-primary)">
-          {formatText(hoveredCat.cat.name, "capitalize")}
-        </p>
-        <p className="text-sm text-(--text-muted) mt-1 line-clamp-2">
-          {stripHtml(hoveredCat.cat.description)}
-        </p>
+      {/* Cabecera: categoría + ver todos */}
+      <div className="flex items-center justify-between gap-4 border-b border-(--border-soft) bg-(--bg-soft) px-5 py-3">
+        <div className="min-w-0">
+          <p className="text-base font-bold text-(--text-primary)">
+            {formatText(hoveredCat.cat.name, "capitalize")}
+          </p>
+          {desc && (
+            <p className="line-clamp-1 text-xs text-(--text-muted)">{desc}</p>
+          )}
+        </div>
+        <Link
+          href={`/${catSlug}`}
+          className="flex-none rounded-full bg-(--cta-primary) px-3.5 py-1.5 text-xs font-semibold text-(--text-inverted) transition hover:opacity-90"
+        >
+          Ver todos
+        </Link>
       </div>
 
-      {hoveredCat.cat.products?.length > 0 ? (
-        <div className="grid grid-cols-4 gap-4">
-          {hoveredCat.cat.products.slice(0, 4).map((product) => {
-            const productSlug = `/${slugifyCategory(
-              hoveredCat.cat.name,
-            )}/${product.slug}`;
-
+      {/* Productos */}
+      {products.length > 0 ? (
+        <div className="grid grid-cols-4 gap-3 p-5">
+          {products.map((product) => {
+            const soldOut = isOutOfStock(product);
             return (
               <Link
-                href={productSlug}
+                href={`/${catSlug}/${product.slug}`}
                 key={product.id}
-                className="
-                  group relative
-                  rounded-xl
-                  border border-(--border-soft)
-                  bg-(--bg-page)
-                  p-3
-                  flex flex-col
-                  hover:shadow-(--shadow-md)
-                  transition
-                  cursor-pointer
-                "
+                className="group flex flex-col overflow-hidden rounded-xl border border-(--border-soft) bg-(--bg-page) transition hover:-translate-y-0.5 hover:border-(--border-strong) hover:shadow-(--shadow-md)"
               >
-                {product.discount > 0 && (
-                  <span
-                    className="
-                      absolute top-2 left-2 z-10
-                      bg-(--danger)
-                      text-(--text-inverted)
-                      text-xs font-semibold
-                      px-2 py-0.5
-                      rounded-full
-                    "
-                  >
-                    -{product.discount}%
-                  </span>
-                )}
-
-                <div className="relative w-full h-28 rounded-lg overflow-hidden">
+                <div className="relative aspect-square overflow-hidden bg-(--bg-page)">
                   <ProductImage
                     product={product}
-                    className="
-                      w-full h-full
-                      object-contain
-                      transition
-                      group-hover:scale-105
-                    "
+                    className={`absolute inset-0 h-full w-full object-contain p-3 transition duration-300 group-hover:scale-105 ${
+                      soldOut ? "opacity-45 grayscale" : ""
+                    }`}
                   />
+                  {!soldOut && product.discount > 0 && (
+                    <span className="absolute left-2 top-2 rounded-md bg-(--success) px-1.5 py-0.5 text-[10px] font-bold text-white shadow-sm">
+                      {product.discount}% OFF
+                    </span>
+                  )}
+                  {soldOut && (
+                    <span className="absolute left-2 top-2 rounded-md bg-(--text-muted) px-1.5 py-0.5 text-[10px] font-bold uppercase text-white shadow-sm">
+                      Agotado
+                    </span>
+                  )}
                 </div>
 
-                <div className="mt-3">
-                  <p className="text-sm font-medium text-(--text-primary) line-clamp-2 hover:underline">
+                <div className="flex flex-1 flex-col gap-1 p-3">
+                  <p className="line-clamp-2 min-h-8 text-xs text-(--text-secondary) transition group-hover:text-(--brand-accent)">
                     {product.name}
                   </p>
-
-                  <div className="mt-2 flex flex-col leading-tight">
-                    {product.oldPrice && product.oldPrice > product.price && (
-                      <span className="text-xs text-(--text-muted) line-through">
-                        ${product.oldPrice.toLocaleString()}
-                      </span>
-                    )}
-                    <div className="flex items-center gap-2">
-                      <span className="text-lg font-bold text-(--text-primary)">
-                        ${product.price.toLocaleString()}
-                      </span>
-                      {product.discount > 0 && (
-                        <span className="rounded bg-(--success) px-1.5 py-0.5 text-[11px] font-bold text-white">
-                          {product.discount}% OFF
-                        </span>
-                      )}
-                    </div>
-                  </div>
-
-                  <p
-                    className="
-                      mt-2 inline-block
-                      text-xs font-semibold
-                      text-(--brand-primary)
-                      hover:text-(--brand-accent)
-                      transition
-                      hover:underline
-                    "
-                  >
-                    Ver producto →
-                  </p>
+                  {product.oldPrice && product.oldPrice > product.price && (
+                    <span className="text-[11px] text-(--text-muted) line-through">
+                      ${product.oldPrice.toLocaleString()}
+                    </span>
+                  )}
+                  <span className="text-sm font-bold text-(--text-primary)">
+                    ${product.price.toLocaleString()}
+                  </span>
                 </div>
               </Link>
             );
           })}
         </div>
       ) : (
-        <p className="text-sm text-(--text-muted)">
+        <p className="px-5 py-8 text-center text-sm text-(--text-muted)">
           No hay productos destacados en esta categoría.
         </p>
       )}
 
-      <div className="mt-6 pt-4 border-t border-(--border-soft) text-center">
-        <Link
-          href={`/${slugifyCategory(hoveredCat.cat.name)}`}
-          className="
-            text-sm font-medium
-            text-(--brand-primary)
-            hover:text-(--brand-accent)
-            transition
-          "
-        >
-          Ver todos los productos →
-        </Link>
-      </div>
+      <style>{`
+        @keyframes megaPop { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+        .mega-pop { animation: megaPop .16s ease both; }
+        @media (prefers-reduced-motion: reduce) { .mega-pop { animation: none; } }
+      `}</style>
     </div>
   );
 }
