@@ -7,8 +7,9 @@ const Header = forwardRef(function Header({ navRef }, headerRef) {
   return (
     <header
       ref={headerRef}
+      style={{ top: "var(--edit-bar-h, 0px)" }}
       className="
-        fixed top-0 left-0 w-full z-50
+        fixed left-0 w-full z-50
         bg-(--bg-page)
         border-b border-(--border-soft)
         will-change-transform
