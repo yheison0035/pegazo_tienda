@@ -108,22 +108,22 @@ export default function CookieConsent({ onVisibleChange }) {
               .
             </p>
 
-            <div className="flex flex-wrap gap-2 md:flex-nowrap">
+            <div className="flex flex-nowrap items-center gap-2 md:flex-none">
               <button
                 onClick={() => setShowPrefs(true)}
-                className="rounded-lg border border-(--border-soft) px-4 py-2 text-sm font-medium text-(--text-secondary) transition hover:bg-(--bg-soft)"
+                className="flex-1 whitespace-nowrap rounded-lg border border-(--border-soft) px-2.5 py-2 text-xs font-medium text-(--text-secondary) transition hover:bg-(--bg-soft) sm:flex-none sm:px-4 sm:text-sm"
               >
                 Configurar
               </button>
               <button
                 onClick={rejectAll}
-                className="rounded-lg border border-(--border-soft) px-4 py-2 text-sm font-medium text-(--text-secondary) transition hover:bg-(--bg-soft)"
+                className="flex-1 whitespace-nowrap rounded-lg border border-(--border-soft) px-2.5 py-2 text-xs font-medium text-(--text-secondary) transition hover:bg-(--bg-soft) sm:flex-none sm:px-4 sm:text-sm"
               >
                 Rechazar
               </button>
               <button
                 onClick={acceptAll}
-                className="rounded-lg bg-(--cta-primary) px-5 py-2 text-sm font-semibold text-(--text-inverted) transition hover:opacity-90"
+                className="flex-1 whitespace-nowrap rounded-lg bg-(--cta-primary) px-2.5 py-2 text-xs font-semibold text-(--text-inverted) transition hover:opacity-90 sm:flex-none sm:px-5 sm:text-sm"
               >
                 Aceptar todas
               </button>
