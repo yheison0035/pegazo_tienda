@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { openCookiePreferences } from "@/components/ui/cookieConsent";
 import {
   PhoneIcon,
   EnvelopeIcon,
@@ -162,6 +163,15 @@ export default function Footer() {
                   >
                     Superintendencia de Industria y Comercio (SIC)
                   </Link>
+                </li>
+                <li>
+                  <button
+                    type="button"
+                    onClick={openCookiePreferences}
+                    className="text-left hover:text-(--brand-accent)"
+                  >
+                    Preferencias de cookies
+                  </button>
                 </li>
               </ul>
             </nav>
