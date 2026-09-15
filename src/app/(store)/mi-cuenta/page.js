@@ -5,8 +5,10 @@ import { useRouter } from "next/navigation";
 import Header from "@/components/layout/header";
 import Footer from "@/components/layout/footer";
 import Container from "@/components/layout/container";
+import ProductCard from "@/components/layout/catalog/catalogSection/productCard";
 import { useCustomer } from "@/context/customerContext";
 import { useEditMode } from "@/context/editModeContext";
+import { useFavorites } from "@/context/favoritesContext";
 import {
   TextField,
   PasswordField,
@@ -20,6 +22,9 @@ import {
   ArrowRightStartOnRectangleIcon,
   IdentificationIcon,
   PencilSquareIcon,
+  HeartIcon,
+  TruckIcon,
+  ClockIcon,
 } from "@heroicons/react/24/outline";
 
 const API_URL = (process.env.NEXT_PUBLIC_API_URL || "").replace(/\/$/, "");
@@ -59,6 +64,20 @@ const STATUS_STYLE = {
   CANCELADA: "bg-(--danger)/15 text-(--danger)",
   RECHAZADA: "bg-(--danger)/15 text-(--danger)",
   DEVUELTA: "bg-(--danger)/15 text-(--danger)",
+};
+
+// Estados que dan por FINALIZADO el pedido (van a "Compras realizadas").
+// El resto (nueva, en proceso, aprobada, despachada…) son "Compras en curso".
+const FINAL_STATUSES = ["ENTREGADA", "CANCELADA", "RECHAZADA", "DEVUELTA"];
+
+// Estado del ENVÍO (lo que más le interesa al cliente en curso).
+const SHIP_STATUS = {
+  PENDIENTE: { label: "Preparando tu pedido", style: "bg-(--bg-soft) text-(--text-muted)" },
+  ASIGNADO_TRANSPORTADORA: { label: "Despachado", style: "bg-(--brand-accent)/15 text-(--brand-accent)" },
+  EN_CAMINO: { label: "En camino", style: "bg-(--brand-accent)/15 text-(--brand-accent)" },
+  ENTREGADO: { label: "Entregado", style: "bg-(--success)/15 text-(--success)" },
+  DEVUELTO: { label: "Devuelto", style: "bg-(--danger)/15 text-(--danger)" },
+  FALLIDO: { label: "Entrega fallida", style: "bg-(--danger)/15 text-(--danger)" },
 };
 
 function initials(name) {
@@ -396,8 +415,51 @@ function AuthPanel() {
   );
 }
 
-function AccountPanel() {
-  const { customer, orders, updateProfile, logout } = useCustomer();
+function OrderCard({ o }) {
+  const ship = o.source === "ECOMMERCE" ? SHIP_STATUS[o.shippingStatus] : null;
+  return (
+    <li className="rounded-xl border border-(--border-soft) p-4 transition hover:border-(--border-strong) hover:shadow-sm">
+      <div className="flex items-center justify-between gap-2">
+        <span className="font-semibold text-(--text-primary)">{o.code}</span>
+        <span
+          className={`rounded-full px-2.5 py-0.5 text-xs font-semibold ${
+            STATUS_STYLE[o.saleStatus] || "bg-(--bg-soft) text-(--text-muted)"
+          }`}
+        >
+          {ORDER_STATUS[o.saleStatus] || o.saleStatus}
+        </span>
+      </div>
+      {/* Estado del envío (solo pedidos de la tienda online) */}
+      {ship && (
+        <div className="mt-2 flex items-center gap-1.5">
+          <TruckIcon className="h-4 w-4 text-(--text-muted)" />
+          <span
+            className={`rounded-full px-2 py-0.5 text-[11px] font-semibold ${ship.style}`}
+          >
+            {ship.label}
+          </span>
+        </div>
+      )}
+      <div className="mt-2 flex items-center justify-between">
+        <span className="text-xs text-(--text-muted)">
+          {o.saleDate
+            ? new Date(o.saleDate).toLocaleDateString("es-CO", {
+                day: "2-digit",
+                month: "short",
+                year: "numeric",
+              })
+            : ""}
+        </span>
+        <span className="font-bold text-(--text-primary)">
+          {money(o.totalAmount)}
+        </span>
+      </div>
+    </li>
+  );
+}
+
+function ProfileForm() {
+  const { customer, updateProfile } = useCustomer();
   const [form, setForm] = useState({
     name: customer?.name || "",
     phone: customer?.phone || "",
@@ -434,14 +496,190 @@ function AccountPanel() {
   };
 
   return (
+    <section className="mx-auto max-w-xl rounded-2xl border border-(--border-soft) bg-(--bg-page) p-6 shadow-sm">
+      <div className="mb-5 flex items-center gap-2">
+        <IdentificationIcon className="h-5 w-5 text-(--brand-accent)" />
+        <h2 className="text-lg font-bold text-(--text-primary)">Mis datos</h2>
+      </div>
+      <form onSubmit={save} noValidate className="space-y-4">
+        <TextField
+          label="Nombre completo"
+          type="text"
+          value={form.name}
+          onChange={set("name")}
+          error={errors.name}
+        />
+        <TextField
+          label="Correo electrónico"
+          type="email"
+          value={customer?.email || ""}
+          disabled
+          readOnly
+          className="cursor-not-allowed opacity-70"
+        />
+        <TextField
+          label="Teléfono"
+          type="tel"
+          inputMode="numeric"
+          value={form.phone}
+          onChange={set("phone")}
+          error={errors.phone}
+        />
+        <TextField
+          label="Documento"
+          type="text"
+          value={form.documentNumber}
+          onChange={set("documentNumber")}
+        />
+        {msg && (
+          <p className="rounded-lg bg-(--bg-soft) px-3 py-2 text-sm text-(--text-primary)">
+            {msg}
+          </p>
+        )}
+        <button
+          type="submit"
+          disabled={busy}
+          className="w-full cursor-pointer rounded-xl bg-(--cta-primary) px-5 py-3 font-semibold text-(--text-inverted) transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-60"
+        >
+          {busy ? "Guardando…" : "Guardar cambios"}
+        </button>
+      </form>
+    </section>
+  );
+}
+
+function OrdersView({ orders }) {
+  const enCurso = orders.filter((o) => !FINAL_STATUSES.includes(o.saleStatus));
+  const realizadas = orders.filter((o) => FINAL_STATUSES.includes(o.saleStatus));
+
+  if (orders.length === 0) {
+    return (
+      <div className="flex flex-col items-center gap-3 rounded-2xl border border-dashed border-(--border-soft) bg-(--bg-soft) px-4 py-16 text-center">
+        <ShoppingBagIcon className="h-10 w-10 text-(--text-muted)" />
+        <p className="text-sm text-(--text-muted)">Todavía no tienes pedidos.</p>
+        <a
+          href="/"
+          className="rounded-lg bg-(--cta-primary) px-4 py-2 text-sm font-semibold text-(--text-inverted) transition hover:opacity-90"
+        >
+          Empezar a comprar
+        </a>
+      </div>
+    );
+  }
+
+  return (
+    <div className="grid gap-6 lg:grid-cols-2">
+      {/* En curso */}
+      <section className="rounded-2xl border border-(--border-soft) bg-(--bg-page) p-6 shadow-sm">
+        <div className="mb-4 flex items-center gap-2">
+          <ClockIcon className="h-5 w-5 text-(--brand-accent)" />
+          <h2 className="text-base font-bold text-(--text-primary)">
+            Compras en curso
+          </h2>
+          <span className="ml-auto rounded-full bg-(--bg-soft) px-2 py-0.5 text-xs font-semibold text-(--text-muted)">
+            {enCurso.length}
+          </span>
+        </div>
+        {enCurso.length === 0 ? (
+          <p className="rounded-xl border border-dashed border-(--border-soft) bg-(--bg-soft) px-4 py-8 text-center text-sm text-(--text-muted)">
+            No tienes compras en curso.
+          </p>
+        ) : (
+          <ul className="space-y-3">
+            {enCurso.map((o) => (
+              <OrderCard key={o.id} o={o} />
+            ))}
+          </ul>
+        )}
+      </section>
+
+      {/* Realizadas */}
+      <section className="rounded-2xl border border-(--border-soft) bg-(--bg-page) p-6 shadow-sm">
+        <div className="mb-4 flex items-center gap-2">
+          <ShoppingBagIcon className="h-5 w-5 text-(--success)" />
+          <h2 className="text-base font-bold text-(--text-primary)">
+            Compras realizadas
+          </h2>
+          <span className="ml-auto rounded-full bg-(--bg-soft) px-2 py-0.5 text-xs font-semibold text-(--text-muted)">
+            {realizadas.length}
+          </span>
+        </div>
+        {realizadas.length === 0 ? (
+          <p className="rounded-xl border border-dashed border-(--border-soft) bg-(--bg-soft) px-4 py-8 text-center text-sm text-(--text-muted)">
+            Aún no tienes compras finalizadas.
+          </p>
+        ) : (
+          <ul className="space-y-3">
+            {realizadas.map((o) => (
+              <OrderCard key={o.id} o={o} />
+            ))}
+          </ul>
+        )}
+      </section>
+    </div>
+  );
+}
+
+function FavoritesView() {
+  const { favorites, listLoading, loadFavorites } = useFavorites();
+
+  useEffect(() => {
+    loadFavorites();
+  }, [loadFavorites]);
+
+  if (listLoading && favorites.length === 0) {
+    return (
+      <p className="py-16 text-center text-(--text-muted)">
+        Cargando tus favoritos…
+      </p>
+    );
+  }
+
+  if (favorites.length === 0) {
+    return (
+      <div className="flex flex-col items-center gap-3 rounded-2xl border border-dashed border-(--border-soft) bg-(--bg-soft) px-4 py-16 text-center">
+        <HeartIcon className="h-10 w-10 text-(--text-muted)" />
+        <p className="text-sm text-(--text-muted)">
+          Todavía no has guardado favoritos. Toca el corazón en un producto para
+          guardarlo aquí.
+        </p>
+        <a
+          href="/"
+          className="rounded-lg bg-(--cta-primary) px-4 py-2 text-sm font-semibold text-(--text-inverted) transition hover:opacity-90"
+        >
+          Explorar productos
+        </a>
+      </div>
+    );
+  }
+
+  return (
+    <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4 lg:grid-cols-4">
+      {favorites.map((p) => (
+        <ProductCard key={p.id} product={p} category={p.category} />
+      ))}
+    </div>
+  );
+}
+
+function AccountPanel({ initialTab = "orders" }) {
+  const { customer, orders, logout } = useCustomer();
+  const { count } = useFavorites();
+  const [tab, setTab] = useState(initialTab);
+
+  const tabs = [
+    { key: "orders", label: "Mis compras", Icon: ShoppingBagIcon },
+    { key: "favorites", label: "Favoritos", Icon: HeartIcon, badge: count },
+    { key: "profile", label: "Mis datos", Icon: IdentificationIcon },
+  ];
+
+  return (
     <div className="mx-auto w-full max-w-5xl space-y-6">
       {/* Cabecera de perfil */}
       <div className="flex flex-col gap-4 overflow-hidden rounded-2xl bg-gradient-to-br from-(--brand-primary) to-(--brand-secondary) p-6 text-(--text-inverted) shadow-sm sm:flex-row sm:items-center sm:justify-between">
         <div className="flex items-center gap-4">
           <span className="flex h-16 w-16 flex-none items-center justify-center rounded-full bg-white/15 text-2xl font-bold ring-2 ring-white/30">
-            {initials(customer?.name) || (
-              <UserCircleIcon className="h-9 w-9" />
-            )}
+            {initials(customer?.name) || <UserCircleIcon className="h-9 w-9" />}
           </span>
           <div className="min-w-0">
             <p className="truncate text-xl font-bold">
@@ -449,8 +687,7 @@ function AccountPanel() {
             </p>
             <p className="truncate text-sm opacity-90">{customer?.email}</p>
             <span className="mt-1 inline-flex items-center gap-1 rounded-full bg-white/15 px-2.5 py-0.5 text-xs font-medium">
-              {orders.length}{" "}
-              {orders.length === 1 ? "pedido" : "pedidos"}
+              {orders.length} {orders.length === 1 ? "pedido" : "pedidos"}
             </span>
           </div>
         </div>
@@ -464,127 +701,76 @@ function AccountPanel() {
         </button>
       </div>
 
-      <div className="grid gap-6 lg:grid-cols-5">
-        {/* Mis datos */}
-        <section className="rounded-2xl border border-(--border-soft) bg-(--bg-page) p-6 shadow-sm lg:col-span-2">
-          <div className="mb-5 flex items-center gap-2">
-            <IdentificationIcon className="h-5 w-5 text-(--brand-accent)" />
-            <h2 className="text-lg font-bold text-(--text-primary)">
-              Mis datos
-            </h2>
-          </div>
-          <form onSubmit={save} noValidate className="space-y-4">
-            <TextField
-              label="Nombre completo"
-              type="text"
-              value={form.name}
-              onChange={set("name")}
-              error={errors.name}
-            />
-            <TextField
-              label="Correo electrónico"
-              type="email"
-              value={customer?.email || ""}
-              disabled
-              readOnly
-              className="cursor-not-allowed opacity-70"
-            />
-            <TextField
-              label="Teléfono"
-              type="tel"
-              inputMode="numeric"
-              value={form.phone}
-              onChange={set("phone")}
-              error={errors.phone}
-            />
-            <TextField
-              label="Documento"
-              type="text"
-              value={form.documentNumber}
-              onChange={set("documentNumber")}
-            />
-            {msg && (
-              <p className="rounded-lg bg-(--bg-soft) px-3 py-2 text-sm text-(--text-primary)">
-                {msg}
-              </p>
-            )}
-            <button
-              type="submit"
-              disabled={busy}
-              className="w-full cursor-pointer rounded-xl bg-(--cta-primary) px-5 py-3 font-semibold text-(--text-inverted) transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-60"
-            >
-              {busy ? "Guardando…" : "Guardar cambios"}
-            </button>
-          </form>
-        </section>
-
-        {/* Mis pedidos */}
-        <section className="rounded-2xl border border-(--border-soft) bg-(--bg-page) p-6 shadow-sm lg:col-span-3">
-          <div className="mb-5 flex items-center gap-2">
-            <ShoppingBagIcon className="h-5 w-5 text-(--brand-accent)" />
-            <h2 className="text-lg font-bold text-(--text-primary)">
-              Mis pedidos
-            </h2>
-          </div>
-          {orders.length === 0 ? (
-            <div className="flex flex-col items-center gap-3 rounded-xl border border-dashed border-(--border-soft) bg-(--bg-soft) px-4 py-12 text-center">
-              <ShoppingBagIcon className="h-10 w-10 text-(--text-muted)" />
-              <p className="text-sm text-(--text-muted)">
-                Todavía no tienes pedidos.
-              </p>
-              <a
-                href="/"
-                className="rounded-lg bg-(--cta-primary) px-4 py-2 text-sm font-semibold text-(--text-inverted) transition hover:opacity-90"
+      {/* Pestañas */}
+      <div className="flex gap-1 rounded-xl border border-(--border-soft) bg-(--bg-page) p-1 shadow-sm">
+        {tabs.map(({ key, label, Icon, badge }) => (
+          <button
+            key={key}
+            type="button"
+            onClick={() => setTab(key)}
+            className={`flex flex-1 items-center justify-center gap-1.5 rounded-lg px-2 py-2.5 text-sm font-semibold transition cursor-pointer ${
+              tab === key
+                ? "bg-(--brand-accent) text-white"
+                : "text-(--text-muted) hover:bg-(--bg-soft) hover:text-(--text-primary)"
+            }`}
+          >
+            <Icon className="h-4 w-4" />
+            <span className="truncate">{label}</span>
+            {badge ? (
+              <span
+                className={`ml-0.5 rounded-full px-1.5 text-[10px] font-bold ${
+                  tab === key
+                    ? "bg-white/25 text-white"
+                    : "bg-(--brand-accent)/15 text-(--brand-accent)"
+                }`}
               >
-                Empezar a comprar
-              </a>
-            </div>
-          ) : (
-            <ul className="space-y-3">
-              {orders.map((o) => (
-                <li
-                  key={o.id}
-                  className="rounded-xl border border-(--border-soft) p-4 transition hover:border-(--border-strong) hover:shadow-sm"
-                >
-                  <div className="flex items-center justify-between gap-2">
-                    <span className="font-semibold text-(--text-primary)">
-                      {o.code}
-                    </span>
-                    <span
-                      className={`rounded-full px-2.5 py-0.5 text-xs font-semibold ${
-                        STATUS_STYLE[o.saleStatus] ||
-                        "bg-(--bg-soft) text-(--text-muted)"
-                      }`}
-                    >
-                      {ORDER_STATUS[o.saleStatus] || o.saleStatus}
-                    </span>
-                  </div>
-                  <div className="mt-2 flex items-center justify-between">
-                    <span className="text-xs text-(--text-muted)">
-                      {o.saleDate
-                        ? new Date(o.saleDate).toLocaleDateString("es-CO", {
-                            day: "2-digit",
-                            month: "short",
-                            year: "numeric",
-                          })
-                        : ""}
-                    </span>
-                    <span className="font-bold text-(--text-primary)">
-                      {money(o.totalAmount)}
-                    </span>
-                  </div>
-                </li>
-              ))}
-            </ul>
-          )}
-        </section>
+                {badge}
+              </span>
+            ) : null}
+          </button>
+        ))}
       </div>
+
+      {tab === "orders" && <OrdersView orders={orders} />}
+      {tab === "favorites" && <FavoritesView />}
+      {tab === "profile" && <ProfileForm />}
     </div>
   );
 }
 
 export default function MiCuentaPage() {
   const { isAuthenticated, loading } = useCustomer();
+  const router = useRouter();
+  const [initialTab, setInitialTab] = useState("orders");
+  const [fromFav, setFromFav] = useState(false);
+
+  // Leer parámetros de la URL una sola vez (pestaña inicial y flujo de favorito).
+  useEffect(() => {
+    try {
+      const p = new URLSearchParams(window.location.search);
+      const tab = p.get("tab");
+      if (tab === "favoritos" || tab === "favorites") setInitialTab("favorites");
+      if (p.get("favorito") === "1") setFromFav(true);
+    } catch {
+      /* noop */
+    }
+  }, []);
+
+  // Si el cliente llegó desde el corazón (sin sesión) y ya inició sesión,
+  // lo devolvemos a donde estaba para que retome su compra.
+  useEffect(() => {
+    if (loading || !isAuthenticated || !fromFav) return;
+    try {
+      const p = new URLSearchParams(window.location.search);
+      const back = p.get("redirect");
+      if (back) {
+        const dest = decodeURIComponent(back);
+        if (dest.startsWith("/")) router.replace(dest);
+      }
+    } catch {
+      /* noop */
+    }
+  }, [loading, isAuthenticated, fromFav, router]);
 
   return (
     <>
@@ -594,7 +780,7 @@ export default function MiCuentaPage() {
           {loading ? (
             <p className="py-16 text-center text-(--text-muted)">Cargando…</p>
           ) : isAuthenticated ? (
-            <AccountPanel />
+            <AccountPanel initialTab={fromFav ? "favorites" : initialTab} />
           ) : (
             <div className="mx-auto w-full max-w-md">
               <div className="mb-6 text-center">

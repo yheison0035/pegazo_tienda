@@ -10,6 +10,7 @@ import {
 import { StarIcon as StarSolid } from "@heroicons/react/24/solid";
 import Link from "next/link";
 import ProductImage from "@/components/ui/productImage";
+import FavoriteButton from "@/components/ui/favoriteButton";
 import useProductCartLogic from "@/hooks/useProductCartLogic";
 import useVertical from "@/hooks/useVertical";
 import { useWebsiteContext } from "@/context/websiteContext";
@@ -224,6 +225,9 @@ export default function CatalogProductCard({ product, category }) {
             />
           )}
         </Link>
+
+        {/* Favorito (corazón) */}
+        <FavoriteButton product={product} />
 
         {/* Etiquetas sobre la imagen */}
         <div className="pointer-events-none absolute left-3 top-3 z-10 flex flex-col items-start gap-1">

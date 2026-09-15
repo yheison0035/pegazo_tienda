@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import useProductCartLogic from "@/hooks/useProductCartLogic";
 import useVertical from "@/hooks/useVertical";
 import { useWebsiteContext } from "@/context/websiteContext";
+import { useFavorites } from "@/context/favoritesContext";
 import { getColorHexByName } from "@/utils/getColor";
 import {
   PlusIcon,
@@ -11,7 +12,9 @@ import {
   ShoppingCartIcon,
   TruckIcon,
   ShieldCheckIcon,
+  HeartIcon as HeartOutline,
 } from "@heroicons/react/24/outline";
+import { HeartIcon as HeartSolid } from "@heroicons/react/24/solid";
 
 // Umbral legado de envío gratis (solo si la empresa NO configuró envíos).
 const FREE_SHIPPING_FROM = 100000;
@@ -38,7 +41,10 @@ export default function ProductInfo({ product, category }) {
   } = useProductCartLogic({ ...product, category }, 1);
   const v = useVertical();
   const { website } = useWebsiteContext();
+  const { isFavorite, toggleFavorite } = useFavorites();
   const router = useRouter();
+
+  const fav = isFavorite(product?.id);
 
   if (!ready) return null;
 
@@ -216,6 +222,22 @@ export default function ProductInfo({ product, category }) {
             >
               <ShoppingCartIcon className="h-5 w-5" />
               {v.addToCart}
+            </button>
+            <button
+              onClick={() => toggleFavorite(product)}
+              aria-pressed={fav}
+              className={`flex w-full items-center justify-center gap-2 rounded-xl py-2.5 text-sm font-semibold transition cursor-pointer ${
+                fav
+                  ? "text-(--danger) hover:bg-(--danger)/10"
+                  : "text-(--text-muted) hover:bg-(--bg-soft)"
+              }`}
+            >
+              {fav ? (
+                <HeartSolid className="h-5 w-5 text-(--danger)" />
+              ) : (
+                <HeartOutline className="h-5 w-5" />
+              )}
+              {fav ? "En tus favoritos" : "Agregar a favoritos"}
             </button>
           </div>
 
