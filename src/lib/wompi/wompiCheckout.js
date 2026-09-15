@@ -9,13 +9,16 @@ export async function openWompiCheckout({
 }) {
   const amountInCents = Math.round(Number(amount) * 100);
 
+  // Base del API SIN slash final (si la env lo trae, un doble slash daría 404).
+  const API_URL = (process.env.NEXT_PUBLIC_API_URL || "").replace(/\/$/, "");
+
   // Dominio con el que el backend identifica la empresa (igual que apiFetch).
   const websiteDomain =
     process.env.NEXT_PUBLIC_WEBSITE_DOMAIN ||
     (typeof window !== "undefined" ? window.location.hostname : "");
 
   const res = await fetch(
-    `${process.env.NEXT_PUBLIC_API_URL}/wompi/signature`,
+    `${API_URL}/wompi/signature`,
     {
       method: "POST",
       headers: {

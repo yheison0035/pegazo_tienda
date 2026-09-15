@@ -26,8 +26,12 @@ export default function CheckoutResultClient() {
     const check = async () => {
       tries += 1;
       try {
+        const API_URL = (process.env.NEXT_PUBLIC_API_URL || "").replace(
+          /\/$/,
+          "",
+        );
         const res = await fetch(
-          `${process.env.NEXT_PUBLIC_API_URL}/wompi/transaction/${transactionId}`,
+          `${API_URL}/wompi/transaction/${transactionId}`,
         );
         const data = await res.json();
         const s = data?.data?.status;
