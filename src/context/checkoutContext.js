@@ -7,7 +7,7 @@ import {
   useRef,
   useState,
 } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useRouter, useSearchParams, usePathname } from "next/navigation";
 import useVertical from "@/hooks/useVertical";
 import { useWebsiteContext } from "@/context/websiteContext";
 import { availableDeliveryModes } from "@/utils/shipping";
@@ -17,6 +17,7 @@ const CheckoutContext = createContext(null);
 export function CheckoutProvider({ children, wompiReady = false }) {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const pathname = usePathname();
   const vertical = useVertical();
   const { website } = useWebsiteContext();
   // Envíos configurados por el dueño (si los hay).
@@ -102,12 +103,15 @@ export function CheckoutProvider({ children, wompiReady = false }) {
   }, []);
 
   useEffect(() => {
-    if (paymentMethod) {
+    // Solo sincroniza el método en la URL cuando se está EN el checkout. En otras
+    // páginas del grupo (p. ej. /checkout/result) NO debe redirigir a /checkout,
+    // o se rompe la pantalla de confirmación.
+    if (paymentMethod && pathname === "/checkout") {
       router.replace(`/checkout?payment=${paymentMethod}`, {
         scroll: false,
       });
     }
-  }, [paymentMethod]);
+  }, [paymentMethod, pathname]);
 
   // Campos que se guardan SIEMPRE en MAYÚSCULA (nombres y dirección).
   const UPPER_FIELDS = new Set([
