@@ -8,6 +8,7 @@ import { Input } from "./components/input";
 import Card from "./components/card";
 import ShippingLocationBlock from "./components/shippingLocationBlock";
 import AddressBuilder from "./components/addressBuilder";
+import SavedAddresses from "./components/savedAddresses";
 
 const MODE_LABEL = {
   shipping: "Envío a domicilio",
@@ -138,6 +139,21 @@ export default function CheckoutForm() {
             )
           }
         >
+          {/* Direcciones guardadas del cliente (si inició sesión) */}
+          <SavedAddresses
+            selectedAddress={formData.address}
+            onPick={(a) =>
+              setFormData((prev) => ({
+                ...prev,
+                department: a.department || "",
+                city: a.city || "",
+                neighborhood: a.neighborhood || "",
+                address: a.address || "",
+                addressDetail: a.addressDetail || "",
+              }))
+            }
+          />
+
           <ShippingLocationBlock
             formData={formData}
             handleChange={handleChange}

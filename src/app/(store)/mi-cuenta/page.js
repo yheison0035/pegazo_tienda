@@ -6,6 +6,7 @@ import Header from "@/components/layout/header";
 import Footer from "@/components/layout/footer";
 import Container from "@/components/layout/container";
 import ProductCard from "@/components/layout/catalog/catalogSection/productCard";
+import AddressManager from "@/components/layout/account/addressManager";
 import { useCustomer } from "@/context/customerContext";
 import { useEditMode } from "@/context/editModeContext";
 import { useFavorites } from "@/context/favoritesContext";
@@ -496,7 +497,7 @@ function ProfileForm() {
   };
 
   return (
-    <section className="mx-auto max-w-xl rounded-2xl border border-(--border-soft) bg-(--bg-page) p-6 shadow-sm">
+    <section className="rounded-2xl border border-(--border-soft) bg-(--bg-page) p-6 shadow-sm">
       <div className="mb-5 flex items-center gap-2">
         <IdentificationIcon className="h-5 w-5 text-(--brand-accent)" />
         <h2 className="text-lg font-bold text-(--text-primary)">Mis datos</h2>
@@ -733,7 +734,12 @@ function AccountPanel({ initialTab = "orders" }) {
 
       {tab === "orders" && <OrdersView orders={orders} />}
       {tab === "favorites" && <FavoritesView />}
-      {tab === "profile" && <ProfileForm />}
+      {tab === "profile" && (
+        <div className="grid gap-6 lg:grid-cols-2">
+          <ProfileForm />
+          <AddressManager />
+        </div>
+      )}
     </div>
   );
 }
