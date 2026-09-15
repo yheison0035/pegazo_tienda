@@ -1,3 +1,7 @@
+"use client";
+
+import { useState } from "react";
+import { createPortal } from "react-dom";
 import { slugifyCategory } from "@/utils/slugify";
 import { stripHtml } from "@/utils/sanitizeHtml";
 import { isOutOfStock } from "@/utils/stock";
@@ -15,13 +19,16 @@ export default function ListProductHeader({
   hoveredCat,
   closeTimer,
 }) {
+  const [mounted] = useState(() => typeof document !== "undefined");
+
   const catSlug = slugifyCategory(hoveredCat.cat.name);
   const desc = stripHtml(hoveredCat.cat.description);
 
   const megaMenuStyle = (() => {
+    const vw = typeof window !== "undefined" ? window.innerWidth : 1280;
     const rawLeft =
       hoveredCat.rect.left + hoveredCat.rect.width / 2 - MENU_WIDTH / 2;
-    const maxLeft = window.innerWidth - MENU_WIDTH - EDGE_PADDING;
+    const maxLeft = vw - MENU_WIDTH - EDGE_PADDING;
     return {
       top: hoveredCat.rect.bottom + 6,
       left: Math.max(EDGE_PADDING, Math.min(rawLeft, maxLeft)),
@@ -31,7 +38,12 @@ export default function ListProductHeader({
 
   const products = hoveredCat.cat.products?.slice(0, 4) || [];
 
-  return (
+  // Se renderiza en un PORTAL a <body>: así el submenú `fixed` se posiciona
+  // respecto a la ventana y NUNCA lo afecta el transform del header (que en las
+  // páginas de categoría se anima al hacer scroll), evitando que se desfase.
+  if (!mounted) return null;
+
+  const menu = (
     <div
       onMouseEnter={() => {
         clearTimeout(closeTimer.current);
@@ -123,4 +135,6 @@ export default function ListProductHeader({
       `}</style>
     </div>
   );
+
+  return createPortal(menu, document.body);
 }
