@@ -1,10 +1,12 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import Header from "@/components/layout/header";
 import Footer from "@/components/layout/footer";
 import Container from "@/components/layout/container";
 import { useCustomer } from "@/context/customerContext";
+import { useEditMode } from "@/context/editModeContext";
 import {
   TextField,
   PasswordField,
@@ -17,7 +19,13 @@ import {
   ShoppingBagIcon,
   ArrowRightStartOnRectangleIcon,
   IdentificationIcon,
+  PencilSquareIcon,
 } from "@heroicons/react/24/outline";
+
+const API_URL = (process.env.NEXT_PUBLIC_API_URL || "").replace(/\/$/, "");
+const websiteDomain =
+  process.env.NEXT_PUBLIC_WEBSITE_DOMAIN ||
+  (typeof window !== "undefined" ? window.location.hostname : "");
 
 const money = (n) =>
   new Intl.NumberFormat("es-CO", {
@@ -89,7 +97,9 @@ function LinkButton({ onClick, children }) {
 
 function AuthPanel() {
   const { login, register, forgotPassword } = useCustomer();
-  const [mode, setMode] = useState("login"); // 'login' | 'register' | 'forgot'
+  const { setEditToken } = useEditMode();
+  const router = useRouter();
+  const [mode, setMode] = useState("login"); // 'login' | 'register' | 'forgot' | 'owner'
   const [form, setForm] = useState({
     name: "",
     email: "",
@@ -116,7 +126,7 @@ function AuthPanel() {
     if (k === "name") return mode === "register" ? validators.name(value) : "";
     if (k === "email") return validators.email(value);
     if (k === "password")
-      return mode === "login"
+      return mode === "login" || mode === "owner"
         ? validators.loginPassword(value)
         : validators.password(value);
     if (k === "phone") return validators.phone(value);
@@ -125,7 +135,7 @@ function AuthPanel() {
 
   function validateAll() {
     const keys =
-      mode === "login"
+      mode === "login" || mode === "owner"
         ? ["email", "password"]
         : mode === "forgot"
           ? ["email"]
@@ -155,6 +165,23 @@ function AuthPanel() {
     if (!validateAll()) return;
     setBusy(true);
     try {
+      if (mode === "owner") {
+        // Login del DUEÑO con sus credenciales del CRM → modo edición.
+        const res = await fetch(`${API_URL}/website/owner/login`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "X-Website-Domain": websiteDomain,
+          },
+          body: JSON.stringify({ email: form.email, password: form.password }),
+        });
+        const data = await res.json();
+        if (!res.ok)
+          throw new Error(data?.message || "No se pudo iniciar sesión.");
+        setEditToken(data.token);
+        router.push("/");
+        return;
+      }
       if (mode === "login") {
         await login({ email: form.email, password: form.password });
       } else if (mode === "register") {
@@ -194,7 +221,7 @@ function AuthPanel() {
 
   return (
     <div className="mx-auto w-full max-w-md">
-      {mode !== "forgot" && (
+      {(mode === "login" || mode === "register") && (
         <div className="mb-6 flex rounded-xl border border-(--border-soft) p-1">
           <TabButton
             active={mode === "login"}
@@ -216,6 +243,16 @@ function AuthPanel() {
           Escribe tu correo y te enviaremos un enlace para crear una nueva
           contraseña.
         </p>
+      )}
+
+      {mode === "owner" && (
+        <div className="mb-5 flex items-start gap-3 rounded-xl bg-(--brand-accent)/10 p-3">
+          <PencilSquareIcon className="h-5 w-5 flex-none text-(--brand-accent)" />
+          <p className="text-sm text-(--text-secondary)">
+            <b>Administrar mi tienda.</b> Ingresa con las mismas credenciales que
+            usas en el CRM para editar los textos de tu tienda.
+          </p>
+        </div>
       )}
 
       <form onSubmit={submit} noValidate className="space-y-4">
@@ -250,7 +287,9 @@ function AuthPanel() {
             onBlur={blur("password")}
             error={touched.password && errors.password}
             autoComplete={
-              mode === "login" ? "current-password" : "new-password"
+              mode === "login" || mode === "owner"
+                ? "current-password"
+                : "new-password"
             }
             hint={mode === "register" ? "Mínimo 6 caracteres." : undefined}
           />
@@ -293,17 +332,29 @@ function AuthPanel() {
             ? "Entrar"
             : mode === "register"
               ? "Crear mi cuenta"
-              : "Enviar enlace"}
+              : mode === "owner"
+                ? "Entrar a editar"
+                : "Enviar enlace"}
         </SubmitButton>
       </form>
 
-      {mode === "forgot" ? (
+      {mode === "forgot" && (
         <p className="mt-4 text-center text-sm text-(--text-muted)">
           <LinkButton onClick={() => switchMode("login")}>
             Volver a iniciar sesión
           </LinkButton>
         </p>
-      ) : (
+      )}
+
+      {mode === "owner" && (
+        <p className="mt-4 text-center text-sm text-(--text-muted)">
+          <LinkButton onClick={() => switchMode("login")}>
+            Volver al inicio de sesión de clientes
+          </LinkButton>
+        </p>
+      )}
+
+      {(mode === "login" || mode === "register") && (
         <>
           <div className="mt-5">
             <GoogleButton
@@ -331,6 +382,14 @@ function AuthPanel() {
               </>
             )}
           </p>
+
+          {mode === "login" && (
+            <p className="mt-4 border-t border-(--border-soft) pt-4 text-center text-sm text-(--text-muted)">
+              <LinkButton onClick={() => switchMode("owner")}>
+                ¿Administras esta tienda? Ingresa para editarla
+              </LinkButton>
+            </p>
+          )}
         </>
       )}
     </div>
