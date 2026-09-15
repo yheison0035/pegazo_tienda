@@ -1,16 +1,20 @@
 import { notFound } from "next/navigation";
-import { legalDocuments } from "@/lib/legal/legalDocuments";
-import { getSiteUrl, getWebsiteConfig } from "@/lib/website.server";
+import { fetchFromApi, getSiteUrl, getWebsiteConfig } from "@/lib/website.server";
 import { siteName } from "@/lib/seo";
 import Container from "@/components/layout/container";
 import Footer from "@/components/layout/footer";
 import Header from "@/components/layout/header";
+import LegalDoc from "@/components/layout/legal/legalDoc";
+
+async function loadDoc(slug) {
+  const res = await fetchFromApi("/website/legal");
+  const docs = res?.data || [];
+  return docs.find((d) => d.slug === slug) || null;
+}
 
 export default async function LegalPage({ params }) {
   const { slug } = await params;
-
-  const doc = legalDocuments.find((d) => d.slug === slug);
-
+  const doc = await loadDoc(slug);
   if (!doc) return notFound();
 
   return (
@@ -18,27 +22,7 @@ export default async function LegalPage({ params }) {
       <Header />
       <Container>
         <main className="px-4 py-10 md:pt-49 pt-70">
-          <h1 className="text-3xl font-bold text-(--text-primary) mb-10">
-            {doc.title}
-          </h1>
-
-          <div className="space-y-10 text-(--text-secondary) leading-relaxed">
-            {doc.sections.map((section, index) => (
-              <section key={index} className="space-y-4">
-                {section.heading && (
-                  <h2 className="text-xl font-semibold text-(--text-primary)">
-                    {section.heading}
-                  </h2>
-                )}
-
-                <div className="space-y-3 text-base">
-                  {section.content.map((text, i) => (
-                    <p key={i}>{text}</p>
-                  ))}
-                </div>
-              </section>
-            ))}
-          </div>
+          <LegalDoc slug={doc.slug} title={doc.title} html={doc.html} />
         </main>
       </Container>
       <Footer />
@@ -49,11 +33,10 @@ export default async function LegalPage({ params }) {
 export async function generateMetadata({ params }) {
   const { slug } = await params;
 
-  const doc = legalDocuments.find((item) => item.slug === slug);
-
-  const [siteUrl, website] = await Promise.all([
+  const [siteUrl, website, doc] = await Promise.all([
     getSiteUrl(),
     getWebsiteConfig(),
+    loadDoc(slug),
   ]);
 
   const name = siteName(website);
