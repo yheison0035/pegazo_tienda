@@ -54,84 +54,138 @@ export default function CheckoutResultClient() {
     };
   }, [transactionId]);
 
+  const isSuccess = status === "approved" || status === "order";
+  const isBusy = status === "loading";
+  const isPending = status === "pending";
+  const isDeclined = status === "declined";
+
   return (
-    <div className="min-h-screen flex items-center justify-center">
-      <div className="bg-white p-8 rounded-xl shadow text-center max-w-md">
+    <div className="flex min-h-screen items-center justify-center bg-(--bg-muted) px-4 py-16">
+      <div className="w-full max-w-md rounded-2xl border border-(--border-soft) bg-(--bg-page) p-8 text-center shadow-sm">
+        {/* Ícono según estado */}
+        <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full">
+          {isSuccess && (
+            <span className="flex h-16 w-16 items-center justify-center rounded-full bg-(--success)/15 text-3xl text-(--success)">
+              ✓
+            </span>
+          )}
+          {(isBusy || isPending) && (
+            <span className="cr-spin h-12 w-12 rounded-full border-4 border-(--brand-accent)/25 border-t-(--brand-accent)" />
+          )}
+          {isDeclined && (
+            <span className="flex h-16 w-16 items-center justify-center rounded-full bg-(--danger)/15 text-3xl text-(--danger)">
+              ✕
+            </span>
+          )}
+        </div>
+
         {status === "order" && (
           <>
-            <h1 className="text-2xl font-bold mb-2 text-green-600">
+            <h1 className="mb-2 text-2xl font-bold text-(--success)">
               ¡Pedido confirmado!
             </h1>
-            <p className="text-sm text-gray-500">
+            <p className="text-sm text-(--text-muted)">
               Te contactaremos para coordinar la entrega. Pagas al recibir.
-            </p>
-            <p className="mt-3 text-sm font-semibold text-gray-700">
-              Pedido {orderCode}
             </p>
           </>
         )}
 
-        {status === "loading" && (
+        {isBusy && (
           <>
-            <h1 className="text-2xl font-bold mb-2">Procesando pago</h1>
-            <p className="text-sm text-gray-500">
-              Validando transacción con Wompi…
+            <h1 className="mb-2 text-2xl font-bold text-(--text-primary)">
+              Procesando pago
+            </h1>
+            <p className="text-sm text-(--text-muted)">
+              Estamos validando tu pago. Un momento por favor…
             </p>
           </>
         )}
 
         {status === "approved" && (
           <>
-            <h1 className="text-2xl font-bold mb-2 text-green-600">
+            <h1 className="mb-2 text-2xl font-bold text-(--success)">
               ¡Pago aprobado!
             </h1>
-            <p className="text-sm text-gray-500">
-              Tu pago fue procesado correctamente. Te enviaremos un correo con la
+            <p className="text-sm text-(--text-muted)">
+              Tu pago fue procesado correctamente. Te enviamos un correo con la
               confirmación de tu pedido.
             </p>
-            {orderCode && (
-              <p className="mt-3 text-sm font-semibold text-gray-700">
-                Pedido {orderCode}
-              </p>
-            )}
           </>
         )}
 
-        {status === "pending" && (
+        {isPending && (
           <>
-            <h1 className="text-2xl font-bold mb-2 text-amber-600">
+            <h1 className="mb-2 text-2xl font-bold text-(--warning)">
               Estamos confirmando tu pago
             </h1>
-            <p className="text-sm text-gray-500">
+            <p className="text-sm text-(--text-muted)">
               Tu pago se está validando. En cuanto se confirme te llegará un
-              correo con tu pedido. No es necesario volver a pagar.
+              correo con tu pedido. <b>No es necesario volver a pagar.</b>
             </p>
-            {orderCode && (
-              <p className="mt-3 text-sm font-semibold text-gray-700">
-                Pedido {orderCode}
-              </p>
-            )}
           </>
         )}
 
-        {status === "declined" && (
+        {isDeclined && (
           <>
-            <h1 className="text-2xl font-bold mb-2 text-red-600">
-              Pago rechazado
+            <h1 className="mb-2 text-2xl font-bold text-(--danger)">
+              El pago no se completó
             </h1>
-            <p className="text-sm text-gray-500">
-              El pago no pudo completarse. Puedes intentarlo de nuevo o elegir
-              pago contra entrega.
+            <p className="text-sm text-(--text-muted)">
+              No pudimos procesar tu pago (puede ser por fondos, la tarjeta o el
+              banco). No se te cobró. Puedes intentarlo de nuevo o pagar contra
+              entrega.
             </p>
           </>
         )}
+
+        {orderCode && (isSuccess || isPending) && (
+          <p className="mt-3 text-sm font-semibold text-(--text-primary)">
+            Pedido {orderCode}
+          </p>
+        )}
+
+        {/* Acciones según estado */}
+        <div className="mt-6 flex flex-col gap-2">
+          {isDeclined && (
+            <a
+              href="/checkout"
+              className="w-full rounded-lg bg-(--cta-primary) py-3 font-semibold text-(--text-inverted) transition hover:opacity-90"
+            >
+              Reintentar el pago
+            </a>
+          )}
+          {(isSuccess || isPending) && (
+            <a
+              href="/"
+              className="w-full rounded-lg bg-(--cta-primary) py-3 font-semibold text-(--text-inverted) transition hover:opacity-90"
+            >
+              Seguir comprando
+            </a>
+          )}
+          <a
+            href="/"
+            className={`w-full rounded-lg py-3 font-medium transition ${
+              isDeclined
+                ? "border border-(--border-soft) text-(--text-secondary) hover:bg-(--bg-soft)"
+                : "text-(--text-muted) hover:text-(--brand-accent)"
+            }`}
+          >
+            {isDeclined ? "Volver a la tienda" : "Ir al inicio"}
+          </a>
+        </div>
 
         {transactionId && (
-          <p className="text-xs text-gray-400 mt-4">
+          <p className="mt-4 text-xs text-(--text-muted)">
             ID de transacción: {transactionId}
           </p>
         )}
       </div>
+
+      <style>{`
+        @keyframes crSpin { to { transform: rotate(360deg); } }
+        .cr-spin { animation: crSpin .8s linear infinite; }
+        @media (prefers-reduced-motion: reduce) { .cr-spin { animation: none; } }
+      `}</style>
     </div>
   );
 }
