@@ -22,7 +22,7 @@ export default function ListProductHeader({
       hoveredCat.rect.left + hoveredCat.rect.width / 2 - MENU_WIDTH / 2;
     const maxLeft = window.innerWidth - MENU_WIDTH - EDGE_PADDING;
     return {
-      top: hoveredCat.rect.bottom + 10,
+      top: hoveredCat.rect.bottom + 6,
       left: Math.max(EDGE_PADDING, Math.min(rawLeft, maxLeft)),
       width: MENU_WIDTH,
     };

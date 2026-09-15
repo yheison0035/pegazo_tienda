@@ -12,7 +12,6 @@ const Header = forwardRef(function Header({ navRef }, headerRef) {
         fixed left-0 w-full z-50
         bg-(--bg-page)
         border-b border-(--border-soft)
-        will-change-transform
       "
     >
       <HeaderTop />
