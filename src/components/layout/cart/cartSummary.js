@@ -10,15 +10,32 @@ import {
 import { FaWhatsapp } from "react-icons/fa";
 import { useWebsiteContext } from "@/context/websiteContext";
 import { getWhatsapp } from "@/lib/website";
+import useVertical from "@/hooks/useVertical";
+import { shippingFor, availableDeliveryModes } from "@/utils/shipping";
 
 export default function CartSummary({ onClose }) {
   const { items } = useCart();
   const { website } = useWebsiteContext();
+  const vertical = useVertical();
 
   const subtotal = items.reduce(
     (acc, item) => acc + item.price * item.quantity,
     0,
   );
+
+  // Estimado del ENVÍO ya en el carrito (según la config del dueño). Se usa el
+  // primer modo de entrega disponible (normalmente envío nacional / domicilio);
+  // el valor final se confirma en el checkout según el modo que elija el cliente.
+  const storeShipping = website?.company?.storeShipping || null;
+  const modes = availableDeliveryModes(storeShipping, vertical?.fulfillment);
+  const estimateMode =
+    modes.find((m) => m === "shipping" || m === "local_delivery") || modes[0];
+  const {
+    cost: shippingCost,
+    label: shippingLabel,
+    message: shippingMessage,
+  } = shippingFor(storeShipping, estimateMode, subtotal);
+  const total = subtotal + shippingCost;
 
   // Ahorro total (suma de descuentos por precio anterior).
   const savings = items.reduce((acc, item) => {
@@ -82,18 +99,29 @@ Quedo atento para finalizar el pedido.`;
           </div>
         )}
 
-        <div className="flex justify-between text-xs text-(--text-muted)">
+        <div className="flex justify-between text-sm text-(--text-secondary)">
           <span>Envío</span>
-          <span>Se calcula en el pago</span>
+          <span
+            className={`font-medium ${
+              shippingCost === 0 ? "text-(--success)" : "text-(--text-primary)"
+            }`}
+          >
+            {shippingCost === 0 ? "Gratis" : `$${shippingCost.toLocaleString()}`}
+          </span>
         </div>
+
+        {shippingMessage && shippingCost > 0 && (
+          <p className="text-xs text-(--success)">{shippingMessage}</p>
+        )}
       </div>
 
       <div className="flex items-center justify-between border-t border-(--border-soft) pt-3 text-base font-semibold">
         <span className="text-(--text-primary)">Total</span>
-        <span className="text-(--cta-primary)">
-          ${subtotal.toLocaleString()}
-        </span>
+        <span className="text-(--cta-primary)">${total.toLocaleString()}</span>
       </div>
+      <p className="text-[11px] text-(--text-muted)">
+        El envío se confirma en el pago según tu dirección y forma de entrega.
+      </p>
 
       {/* Acción principal: ir al checkout con pagos en línea / contra entrega */}
       <Link
