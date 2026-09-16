@@ -26,6 +26,7 @@ import {
   HeartIcon,
   TruckIcon,
   ClockIcon,
+  MapPinIcon,
 } from "@heroicons/react/24/outline";
 
 const API_URL = (process.env.NEXT_PUBLIC_API_URL || "").replace(/\/$/, "");
@@ -440,6 +441,12 @@ function OrderCard({ o }) {
             {ship.label}
           </span>
         </div>
+      )}
+      {o.address && (
+        <p className="mt-2 flex items-start gap-1.5 text-xs text-(--text-muted)">
+          <MapPinIcon className="mt-0.5 h-3.5 w-3.5 flex-none" />
+          <span>{o.address}</span>
+        </p>
       )}
       <div className="mt-2 flex items-center justify-between">
         <span className="text-xs text-(--text-muted)">
