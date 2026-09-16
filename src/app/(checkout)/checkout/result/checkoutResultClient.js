@@ -2,6 +2,14 @@
 
 import { useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
+import {
+  CheckIcon,
+  ClipboardDocumentIcon,
+  EnvelopeIcon,
+  TruckIcon,
+  ShoppingBagIcon,
+  ArrowPathIcon,
+} from "@heroicons/react/24/outline";
 
 const money = (n) =>
   typeof n === "number" ? `$${n.toLocaleString("es-CO")}` : "$0";
@@ -22,6 +30,7 @@ export default function CheckoutResultClient() {
     transactionId ? "loading" : orderCode ? "order" : "loading",
   );
   const [summary, setSummary] = useState(null);
+  const [copied, setCopied] = useState(false);
 
   // Resumen de la compra guardado en el checkout (sobrevive el viaje a Wompi).
   useEffect(() => {
@@ -76,15 +85,11 @@ export default function CheckoutResultClient() {
   const code = summary?.code || orderCode;
 
   const HEAD = {
-    approved: { color: "--success", icon: "✓", title: "¡Pago aprobado!" },
-    order: { color: "--success", icon: "✓", title: "¡Pedido confirmado!" },
-    pending: {
-      color: "--warning",
-      icon: "…",
-      title: "Estamos confirmando tu pago",
-    },
-    declined: { color: "--danger", icon: "✕", title: "El pago no se completó" },
-    loading: { color: "--brand-accent", icon: "", title: "Procesando pago" },
+    approved: { color: "--success", title: "¡Pago aprobado!" },
+    order: { color: "--success", title: "¡Pedido confirmado!" },
+    pending: { color: "--warning", title: "Estamos confirmando tu pago" },
+    declined: { color: "--danger", title: "El pago no se completó" },
+    loading: { color: "--brand-accent", title: "Procesando tu pago" },
   }[status];
 
   const SUBTITLE = {
@@ -99,37 +104,123 @@ export default function CheckoutResultClient() {
     loading: "Estamos validando tu pago, un momento por favor…",
   }[status];
 
+  async function copyCode() {
+    if (!code) return;
+    try {
+      await navigator.clipboard.writeText(code);
+    } catch {
+      // Fallback para navegadores sin clipboard API (o contexto no seguro).
+      try {
+        const ta = document.createElement("textarea");
+        ta.value = code;
+        ta.style.position = "fixed";
+        ta.style.opacity = "0";
+        document.body.appendChild(ta);
+        ta.select();
+        document.execCommand("copy");
+        document.body.removeChild(ta);
+      } catch {
+        return;
+      }
+    }
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  }
+
   return (
     <div className="flex min-h-screen items-start justify-center bg-(--bg-muted) px-4 py-10">
       <div className="w-full max-w-xl space-y-4">
         {/* Tarjeta de estado */}
-        <div className="rounded-2xl border border-(--border-soft) bg-(--bg-page) p-8 text-center shadow-sm">
-          <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center">
-            {isSuccess && (
-              <span className="flex h-16 w-16 items-center justify-center rounded-full bg-(--success)/15 text-3xl text-(--success)">
-                ✓
-              </span>
-            )}
-            {(isBusy || isPending) && (
-              <span className="cr-spin h-12 w-12 rounded-full border-4 border-(--brand-accent)/25 border-t-(--brand-accent)" />
-            )}
-            {isDeclined && (
-              <span className="flex h-16 w-16 items-center justify-center rounded-full bg-(--danger)/15 text-3xl text-(--danger)">
-                ✕
-              </span>
+        <div className="overflow-hidden rounded-2xl border border-(--border-soft) bg-(--bg-page) shadow-sm">
+          {/* Franja superior con el color del estado */}
+          <div
+            className="h-1.5 w-full"
+            style={{ background: `var(${HEAD.color})` }}
+          />
+          <div className="p-8 text-center">
+            <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center">
+              {isSuccess && (
+                <span className="cr-pop flex h-16 w-16 items-center justify-center rounded-full bg-(--success)/15">
+                  <CheckIcon className="h-8 w-8 text-(--success)" strokeWidth={3} />
+                </span>
+              )}
+              {(isBusy || isPending) && (
+                <span className="cr-spin h-12 w-12 rounded-full border-4 border-(--brand-accent)/25 border-t-(--brand-accent)" />
+              )}
+              {isDeclined && (
+                <span className="flex h-16 w-16 items-center justify-center rounded-full bg-(--danger)/15 text-3xl font-bold text-(--danger)">
+                  ✕
+                </span>
+              )}
+            </div>
+            <h1
+              className="mb-2 text-2xl font-bold"
+              style={{ color: `var(${HEAD.color})` }}
+            >
+              {HEAD.title}
+            </h1>
+            <p className="mx-auto max-w-md text-sm leading-relaxed text-(--text-muted)">
+              {SUBTITLE}
+            </p>
+
+            {/* Número de pedido copiable */}
+            {code && (isSuccess || isPending) && (
+              <div className="mx-auto mt-6 max-w-xs rounded-xl border border-dashed border-(--brand-accent)/40 bg-(--brand-accent)/5 p-4">
+                <p className="text-xs font-medium uppercase tracking-wide text-(--text-muted)">
+                  Número de pedido
+                </p>
+                <div className="mt-1.5 flex items-center justify-center gap-2">
+                  <span className="text-2xl font-extrabold tracking-wider text-(--text-primary)">
+                    {code}
+                  </span>
+                  <button
+                    onClick={copyCode}
+                    aria-label="Copiar número de pedido"
+                    className={`inline-flex items-center gap-1 rounded-lg border px-2.5 py-1.5 text-xs font-semibold transition cursor-pointer ${
+                      copied
+                        ? "border-(--success) bg-(--success)/10 text-(--success)"
+                        : "border-(--border-soft) text-(--text-secondary) hover:border-(--brand-accent) hover:text-(--brand-accent)"
+                    }`}
+                  >
+                    {copied ? (
+                      <>
+                        <CheckIcon className="h-4 w-4" /> ¡Copiado!
+                      </>
+                    ) : (
+                      <>
+                        <ClipboardDocumentIcon className="h-4 w-4" /> Copiar
+                      </>
+                    )}
+                  </button>
+                </div>
+                <p className="mt-1.5 text-xs text-(--text-muted)">
+                  Guárdalo para consultar el estado de tu pedido.
+                </p>
+              </div>
             )}
           </div>
-          <h1
-            className="mb-2 text-2xl font-bold"
-            style={{ color: `var(${HEAD.color})` }}
-          >
-            {HEAD.title}
-          </h1>
-          <p className="text-sm text-(--text-muted)">{SUBTITLE}</p>
-          {code && (isSuccess || isPending) && (
-            <p className="mt-3 inline-block rounded-full bg-(--bg-soft) px-3 py-1 text-sm font-semibold text-(--text-primary)">
-              Pedido {code}
-            </p>
+
+          {/* Próximos pasos */}
+          {(isSuccess || isPending) && (
+            <div className="border-t border-(--border-soft) bg-(--bg-soft)/50 px-6 py-5">
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+                <NextStep
+                  Icon={EnvelopeIcon}
+                  title="Revisa tu correo"
+                  text="Te enviamos la confirmación con el detalle."
+                />
+                <NextStep
+                  Icon={TruckIcon}
+                  title="Preparamos tu envío"
+                  text="Te avisaremos en cada cambio de estado."
+                />
+                <NextStep
+                  Icon={ShoppingBagIcon}
+                  title="Sigue tu pedido"
+                  text="Consúltalo con tu número de pedido."
+                />
+              </div>
+            </div>
           )}
         </div>
 
@@ -226,8 +317,9 @@ export default function CheckoutResultClient() {
           {isDeclined && (
             <a
               href="/checkout"
-              className="w-full rounded-lg bg-(--cta-primary) py-3 text-center font-semibold text-(--text-inverted) transition hover:opacity-90"
+              className="flex w-full items-center justify-center gap-2 rounded-lg bg-(--cta-primary) py-3 text-center font-semibold text-(--text-inverted) transition hover:opacity-90"
             >
+              <ArrowPathIcon className="h-5 w-5" />
               Reintentar el pago
             </a>
           )}
@@ -252,12 +344,26 @@ export default function CheckoutResultClient() {
       <style>{`
         @keyframes crSpin { to { transform: rotate(360deg); } }
         .cr-spin { animation: crSpin .8s linear infinite; }
-        @media (prefers-reduced-motion: reduce) { .cr-spin { animation: none; } }
+        @keyframes crPop { 0% { transform: scale(.6); opacity: 0; } 60% { transform: scale(1.08); } 100% { transform: scale(1); opacity: 1; } }
+        .cr-pop { animation: crPop .35s ease-out both; }
+        @media (prefers-reduced-motion: reduce) { .cr-spin, .cr-pop { animation: none; } }
         @media print {
           body { background: #fff; }
           .cr-noprint { display: none !important; }
         }
       `}</style>
+    </div>
+  );
+}
+
+function NextStep({ Icon, title, text }) {
+  return (
+    <div className="flex flex-col items-center gap-1.5 text-center">
+      <span className="flex h-10 w-10 items-center justify-center rounded-full bg-(--brand-accent)/12 text-(--brand-accent)">
+        <Icon className="h-5 w-5" />
+      </span>
+      <p className="text-sm font-semibold text-(--text-primary)">{title}</p>
+      <p className="text-xs leading-snug text-(--text-muted)">{text}</p>
     </div>
   );
 }
