@@ -689,6 +689,12 @@ function AccountPanel({ initialTab = "orders" }) {
   const { count } = useFavorites();
   const [tab, setTab] = useState(initialTab);
 
+  // La pestaña inicial puede resolverse tras leer la URL (?tab=favoritos), que
+  // ocurre en un efecto del padre. Sincronizamos para abrir directo esa pestaña.
+  useEffect(() => {
+    setTab(initialTab);
+  }, [initialTab]);
+
   const tabs = [
     { key: "orders", label: "Mis compras", Icon: ShoppingBagIcon },
     { key: "favorites", label: "Favoritos", Icon: HeartIcon, badge: count },
