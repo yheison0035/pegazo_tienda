@@ -7,6 +7,7 @@ import Footer from "@/components/layout/footer";
 import Container from "@/components/layout/container";
 import ProductCard from "@/components/layout/catalog/catalogSection/productCard";
 import AddressManager from "@/components/layout/account/addressManager";
+import OrderDetailModal from "@/components/layout/account/orderDetailModal";
 import { useCustomer } from "@/context/customerContext";
 import { useEditMode } from "@/context/editModeContext";
 import { useFavorites } from "@/context/favoritesContext";
@@ -417,10 +418,13 @@ function AuthPanel() {
   );
 }
 
-function OrderCard({ o }) {
+function OrderCard({ o, onOpen }) {
   const ship = o.source === "ECOMMERCE" ? SHIP_STATUS[o.shippingStatus] : null;
   return (
-    <li className="rounded-xl border border-(--border-soft) p-4 transition hover:border-(--border-strong) hover:shadow-sm">
+    <li
+      onClick={() => onOpen?.(o.code)}
+      className="cursor-pointer rounded-xl border border-(--border-soft) p-4 transition hover:border-(--brand-accent) hover:shadow-sm"
+    >
       <div className="flex items-center justify-between gap-2">
         <span className="font-semibold text-(--text-primary)">{o.code}</span>
         <span
@@ -462,6 +466,9 @@ function OrderCard({ o }) {
           {money(o.totalAmount)}
         </span>
       </div>
+      <p className="mt-2 text-right text-xs font-semibold text-(--brand-accent)">
+        Ver detalle →
+      </p>
     </li>
   );
 }
@@ -557,6 +564,7 @@ function ProfileForm() {
 }
 
 function OrdersView({ orders }) {
+  const [openCode, setOpenCode] = useState(null);
   const enCurso = orders.filter((o) => !FINAL_STATUSES.includes(o.saleStatus));
   const realizadas = orders.filter((o) => FINAL_STATUSES.includes(o.saleStatus));
 
@@ -576,55 +584,61 @@ function OrdersView({ orders }) {
   }
 
   return (
-    <div className="grid gap-6 lg:grid-cols-2">
-      {/* En curso */}
-      <section className="rounded-2xl border border-(--border-soft) bg-(--bg-page) p-6 shadow-sm">
-        <div className="mb-4 flex items-center gap-2">
-          <ClockIcon className="h-5 w-5 text-(--brand-accent)" />
-          <h2 className="text-base font-bold text-(--text-primary)">
-            Compras en curso
-          </h2>
-          <span className="ml-auto rounded-full bg-(--bg-soft) px-2 py-0.5 text-xs font-semibold text-(--text-muted)">
-            {enCurso.length}
-          </span>
-        </div>
-        {enCurso.length === 0 ? (
-          <p className="rounded-xl border border-dashed border-(--border-soft) bg-(--bg-soft) px-4 py-8 text-center text-sm text-(--text-muted)">
-            No tienes compras en curso.
-          </p>
-        ) : (
-          <ul className="space-y-3">
-            {enCurso.map((o) => (
-              <OrderCard key={o.id} o={o} />
-            ))}
-          </ul>
-        )}
-      </section>
+    <>
+      <div className="grid gap-6 lg:grid-cols-2">
+        {/* En curso */}
+        <section className="rounded-2xl border border-(--border-soft) bg-(--bg-page) p-6 shadow-sm">
+          <div className="mb-4 flex items-center gap-2">
+            <ClockIcon className="h-5 w-5 text-(--brand-accent)" />
+            <h2 className="text-base font-bold text-(--text-primary)">
+              Compras en curso
+            </h2>
+            <span className="ml-auto rounded-full bg-(--bg-soft) px-2 py-0.5 text-xs font-semibold text-(--text-muted)">
+              {enCurso.length}
+            </span>
+          </div>
+          {enCurso.length === 0 ? (
+            <p className="rounded-xl border border-dashed border-(--border-soft) bg-(--bg-soft) px-4 py-8 text-center text-sm text-(--text-muted)">
+              No tienes compras en curso.
+            </p>
+          ) : (
+            <ul className="space-y-3">
+              {enCurso.map((o) => (
+                <OrderCard key={o.id} o={o} onOpen={setOpenCode} />
+              ))}
+            </ul>
+          )}
+        </section>
 
-      {/* Realizadas */}
-      <section className="rounded-2xl border border-(--border-soft) bg-(--bg-page) p-6 shadow-sm">
-        <div className="mb-4 flex items-center gap-2">
-          <ShoppingBagIcon className="h-5 w-5 text-(--success)" />
-          <h2 className="text-base font-bold text-(--text-primary)">
-            Compras realizadas
-          </h2>
-          <span className="ml-auto rounded-full bg-(--bg-soft) px-2 py-0.5 text-xs font-semibold text-(--text-muted)">
-            {realizadas.length}
-          </span>
-        </div>
-        {realizadas.length === 0 ? (
-          <p className="rounded-xl border border-dashed border-(--border-soft) bg-(--bg-soft) px-4 py-8 text-center text-sm text-(--text-muted)">
-            Aún no tienes compras finalizadas.
-          </p>
-        ) : (
-          <ul className="space-y-3">
-            {realizadas.map((o) => (
-              <OrderCard key={o.id} o={o} />
-            ))}
-          </ul>
-        )}
-      </section>
-    </div>
+        {/* Realizadas */}
+        <section className="rounded-2xl border border-(--border-soft) bg-(--bg-page) p-6 shadow-sm">
+          <div className="mb-4 flex items-center gap-2">
+            <ShoppingBagIcon className="h-5 w-5 text-(--success)" />
+            <h2 className="text-base font-bold text-(--text-primary)">
+              Compras realizadas
+            </h2>
+            <span className="ml-auto rounded-full bg-(--bg-soft) px-2 py-0.5 text-xs font-semibold text-(--text-muted)">
+              {realizadas.length}
+            </span>
+          </div>
+          {realizadas.length === 0 ? (
+            <p className="rounded-xl border border-dashed border-(--border-soft) bg-(--bg-soft) px-4 py-8 text-center text-sm text-(--text-muted)">
+              Aún no tienes compras finalizadas.
+            </p>
+          ) : (
+            <ul className="space-y-3">
+              {realizadas.map((o) => (
+                <OrderCard key={o.id} o={o} onOpen={setOpenCode} />
+              ))}
+            </ul>
+          )}
+        </section>
+      </div>
+
+      {openCode && (
+        <OrderDetailModal code={openCode} onClose={() => setOpenCode(null)} />
+      )}
+    </>
   );
 }
 

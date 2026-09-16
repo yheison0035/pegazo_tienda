@@ -10,3 +10,8 @@ export async function trackOrder({ ref, document }) {
     auth: false,
   });
 }
+
+// Detalle completo de un pedido del cliente logueado (requiere sesión).
+export async function getMyOrder(code) {
+  return apiFetch(`/ecommerce/orders/${encodeURIComponent(code)}`);
+}
