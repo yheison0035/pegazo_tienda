@@ -63,6 +63,25 @@ export default function TrackOrder() {
 
   useEffect(() => setMounted(true), []);
 
+  // Deep-link desde el correo: al abrir "Ver mi pedido" (/?pedido=CODE) se abre
+  // esta consulta con el número ya puesto; el cliente solo pone su cédula.
+  useEffect(() => {
+    try {
+      const params = new URLSearchParams(window.location.search);
+      const code = params.get("pedido");
+      if (code) {
+        setRef(code);
+        setOpen(true);
+        params.delete("pedido");
+        const qs = params.toString();
+        const clean = window.location.pathname + (qs ? `?${qs}` : "");
+        window.history.replaceState({}, "", clean);
+      }
+    } catch {
+      /* noop */
+    }
+  }, []);
+
   // Tiempo real: mientras hay un pedido en pantalla, re-consulta su estado en
   // silencio (cada 20s y al volver a la pestaña) para reflejar cambios del CRM.
   useEffect(() => {
@@ -503,10 +522,10 @@ export default function TrackOrder() {
         onClick={() => setOpen(true)}
         aria-label="Consultar mi pedido"
         title="Consultar mi pedido"
-        className="group flex items-center gap-2 rounded-full px-2 py-1.5 text-(--text-primary) transition hover:bg-(--brand-accent)/10 hover:text-(--brand-accent)"
+        className="group flex items-center gap-1.5 rounded-full border border-(--border-soft) px-2.5 py-1.5 text-(--text-primary) transition hover:border-(--brand-accent) hover:bg-(--brand-accent)/10 hover:text-(--brand-accent) sm:border-0 sm:px-2"
       >
         <TruckIcon className="h-6 w-6 transition group-hover:-translate-x-0.5" />
-        <span className="hidden text-sm font-medium lg:inline">Mi pedido</span>
+        <span className="text-xs font-medium sm:text-sm">Mi pedido</span>
       </button>
 
       {open && mounted && createPortal(modal, window.document.body)}
