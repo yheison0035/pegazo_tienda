@@ -6,11 +6,11 @@ import ProductImage from "@/components/ui/productImage";
 import { getColorHexByName } from "@/utils/getColor";
 import Link from "next/link";
 
-export default function CartItem({ item }) {
+export default function CartItem({ item, onNavigate }) {
   const { updateItemQuantity, removeFromCart } = useCart();
 
   const isLowStock = item.stock <= 3;
-
+  const lineTotal = item.price * item.quantity;
 
   function increase() {
     if (item.quantity < item.stock) {
@@ -27,109 +27,101 @@ export default function CartItem({ item }) {
   }
 
   return (
-    <div className="flex gap-4 py-5 border-b border-(--border-soft)">
+    <div className="flex gap-3 border-b border-(--border-soft) py-4 last:border-0">
+      {/* Imagen */}
       <Link
         href={`/${item.category}/${item.slug}`}
-        className="
-          w-20 h-20
-          rounded-xl
-          flex items-center justify-center
-          overflow-hidden
-          bg-(--bg-soft)
-          shrink-0
-        "
+        onClick={onNavigate}
+        className="h-[68px] w-[68px] flex-none overflow-hidden rounded-xl border border-(--border-soft) bg-(--bg-soft)"
       >
         <ProductImage
           product={item}
           compact
-          className="w-full h-full object-contain"
+          className="h-full w-full object-contain p-1"
         />
       </Link>
 
-      <div className="flex-1 flex flex-col gap-1">
-        <Link href={`/${item.category}/${item.slug}`}>
-          <p className="font-semibold text-sm text-(--text-primary) leading-tight hover:underline">
-            {item.name}
-          </p>
-        </Link>
+      {/* Info */}
+      <div className="flex min-w-0 flex-1 flex-col">
+        <div className="flex items-start justify-between gap-2">
+          <Link
+            href={`/${item.category}/${item.slug}`}
+            onClick={onNavigate}
+            className="min-w-0"
+          >
+            <p className="line-clamp-2 text-sm font-semibold leading-snug text-(--text-primary) transition hover:text-(--brand-accent)">
+              {item.name}
+            </p>
+          </Link>
+          <button
+            onClick={() => removeFromCart(item.key)}
+            title="Eliminar producto"
+            aria-label="Eliminar producto"
+            className="-mr-1 -mt-1 flex-none rounded-lg p-1.5 text-(--text-muted) transition hover:bg-(--danger)/10 hover:text-(--danger) cursor-pointer"
+          >
+            <TrashIcon className="h-4 w-4" />
+          </button>
+        </div>
 
         {item.color && (
-          <div className="flex items-center gap-2 text-xs text-(--text-muted)">
-            <span>Color:</span>
-            <span className="flex items-center gap-1">
-              <span
-                className="w-3 h-3 rounded-full border border-(--border-strong)"
-                style={{ backgroundColor: getColorHexByName(item.color) }}
-              />
-              <span className="capitalize">{item.color}</span>
-            </span>
+          <div className="mt-0.5 flex items-center gap-1.5 text-xs text-(--text-muted)">
+            <span
+              className="h-3 w-3 rounded-full border border-(--border-strong)"
+              style={{ backgroundColor: getColorHexByName(item.color) }}
+            />
+            <span className="capitalize">{item.color}</span>
           </div>
         )}
 
-        <div className="flex items-center gap-2 mt-1 flex-wrap">
+        <div className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-0.5">
+          <span className="text-sm font-bold text-(--text-primary)">
+            ${item.price.toLocaleString()}
+          </span>
           {item.oldPrice && item.oldPrice > item.price && (
             <span className="text-xs text-(--text-muted) line-through">
               ${item.oldPrice.toLocaleString()}
             </span>
           )}
-
-          <span className="text-sm font-bold text-(--text-primary)">
-            ${item.price.toLocaleString()}
-          </span>
-
           {item.discount > 0 && (
-            <span className="rounded-md bg-(--bg-muted) px-1.5 py-0.5 text-[10px] font-bold text-(--cta-primary)">
+            <span className="rounded-md bg-(--success)/15 px-1.5 py-0.5 text-[10px] font-bold text-(--success)">
               -{item.discount}%
             </span>
           )}
         </div>
 
-        <p
-          className={`text-xs mt-1 ${
-            isLowStock ? "text-(--warning)" : "text-(--text-muted)"
-          }`}
-        >
-          {isLowStock
-            ? `¡Solo quedan ${item.stock}!`
-            : `Stock disponible: ${item.stock}`}
-        </p>
+        {isLowStock && (
+          <p className="mt-0.5 text-[11px] font-medium text-(--warning)">
+            ¡Solo quedan {item.stock}!
+          </p>
+        )}
 
-        <div className="flex items-center mt-3">
-          <div className="flex items-center border border-(--border-soft) rounded-lg overflow-hidden">
+        {/* Cantidad + total de la línea */}
+        <div className="mt-2 flex items-center justify-between">
+          <div className="flex items-center rounded-lg border border-(--border-soft)">
             <button
               onClick={decrease}
-              className="px-2 py-1 hover:bg-(--bg-soft) cursor-pointer"
+              aria-label="Quitar uno"
+              className="flex h-8 w-8 items-center justify-center text-(--text-secondary) transition hover:bg-(--bg-soft) cursor-pointer"
             >
-              <MinusIcon className="w-4 h-4" />
+              <MinusIcon className="h-4 w-4" />
             </button>
-
-            <span className="px-3 text-sm font-medium min-w-8 text-center">
+            <span className="min-w-8 text-center text-sm font-semibold">
               {item.quantity}
             </span>
-
             <button
               onClick={increase}
               disabled={item.quantity >= item.stock}
-              className="px-2 py-1 hover:bg-(--bg-soft) disabled:opacity-40 cursor-pointer"
+              aria-label="Agregar uno"
+              className="flex h-8 w-8 items-center justify-center text-(--text-secondary) transition hover:bg-(--bg-soft) disabled:opacity-40 cursor-pointer"
             >
-              <PlusIcon className="w-4 h-4" />
+              <PlusIcon className="h-4 w-4" />
             </button>
           </div>
+
+          <span className="text-sm font-bold text-(--text-primary)">
+            ${lineTotal.toLocaleString()}
+          </span>
         </div>
-      </div>
-
-      <div className="flex flex-col items-end justify-between">
-        <span className="text-sm font-bold text-(--text-primary)">
-          ${(item.price * item.quantity).toLocaleString()}
-        </span>
-
-        <button
-          onClick={() => removeFromCart(item.key)}
-          title="Eliminar producto"
-          className="text-(--text-muted) hover:text-(--danger) transition cursor-pointer"
-        >
-          <TrashIcon className="w-4 h-4" />
-        </button>
       </div>
     </div>
   );

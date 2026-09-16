@@ -1,47 +1,57 @@
 // cart/cartDrawerMobile.jsx
 "use client";
 
-import { XMarkIcon } from "@heroicons/react/24/outline";
+import { XMarkIcon, ShoppingBagIcon } from "@heroicons/react/24/outline";
 import { useCart } from "@/context/cartContext";
 import CartItem from "../cartItem";
 import CartSummary from "../cartSummary";
+import CartEmpty from "./cartEmpty";
 
 export default function CartDrawerMobile({ open, onClose }) {
   const { items } = useCart();
+  const count = items.reduce((a, i) => a + i.quantity, 0);
 
   return (
     <>
-      <div className="fixed inset-0 bg-black/40 z-998" onClick={onClose} />
+      <div className="fixed inset-0 z-998 bg-black/50" onClick={onClose} />
 
       <aside
-        className="
-          fixed bottom-0 left-0 right-0
-          h-[85dvh]
-          bg-(--bg-page)
-          z-999
-          rounded-t-2xl
-          flex flex-col
-          animate-slide-up
-        "
+        className="animate-slide-up fixed inset-x-0 bottom-0 z-999 flex max-h-[92dvh] flex-col rounded-t-2xl bg-(--bg-page) shadow-2xl"
       >
-        <div className="flex justify-center py-2">
-          <div className="w-10 h-1.5 rounded-full bg-(--border-soft)" />
+        {/* Asa para arrastrar */}
+        <div className="flex shrink-0 justify-center pt-2.5 pb-1">
+          <div className="h-1.5 w-10 rounded-full bg-(--border-strong)" />
         </div>
 
-        <div className="flex items-center justify-between px-4 pb-2 border-b border-(--border-soft)">
-          <h2 className="text-lg font-semibold">Tu carrito</h2>
-          <button onClick={onClose}>
-            <XMarkIcon className="w-6 h-6" />
+        {/* Cabecera */}
+        <div className="flex shrink-0 items-center justify-between border-b border-(--border-soft) px-4 pb-3">
+          <h2 className="flex items-center gap-2 text-lg font-bold text-(--text-primary)">
+            <ShoppingBagIcon className="h-5 w-5 text-(--brand-accent)" />
+            Tu carrito
+            {count > 0 && (
+              <span className="rounded-full bg-(--brand-accent)/15 px-2 py-0.5 text-xs font-bold text-(--brand-accent)">
+                {count}
+              </span>
+            )}
+          </h2>
+          <button
+            onClick={onClose}
+            aria-label="Cerrar"
+            className="rounded-full p-1.5 text-(--text-muted) transition hover:bg-(--bg-soft) cursor-pointer"
+          >
+            <XMarkIcon className="h-6 w-6" />
           </button>
         </div>
 
-        <div className="flex-1 overflow-y-auto p-4">
+        {/* Lista (scroll independiente): min-h-0 es clave para que el footer
+            no se salga de la pantalla cuando hay varios productos. */}
+        <div className="min-h-0 flex-1 overflow-y-auto px-4">
           {items.length === 0 ? (
-            <p className="text-sm text-center text-(--text-muted) mt-10">
-              Tu carrito está vacío
-            </p>
+            <CartEmpty onClose={onClose} />
           ) : (
-            items.map((item) => <CartItem key={item.key} item={item} />)
+            items.map((item) => (
+              <CartItem key={item.key} item={item} onNavigate={onClose} />
+            ))
           )}
         </div>
 
