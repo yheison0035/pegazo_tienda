@@ -212,6 +212,9 @@ export default function OrderDetailModal({ code, onClose }) {
                   {order.carrier && (
                     <Info label="Transportadora" value={order.carrier} />
                   )}
+                  {order.estimatedTime && (
+                    <Info label="Tiempo de entrega" value={order.estimatedTime} />
+                  )}
                   {order.trackingNumber && (
                     <Info label="Guía" value={order.trackingNumber} />
                   )}
