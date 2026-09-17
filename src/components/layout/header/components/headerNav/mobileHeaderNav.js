@@ -4,11 +4,7 @@ import { useEffect, useRef } from "react";
 import { slugifyCategory } from "@/utils/slugify";
 import { formatText } from "@/utils/textFormat";
 
-export default function MobileHeaderNav({
-  categories,
-  activeSlug,
-  onNavigate,
-}) {
+export default function MobileHeaderNav({ categories, activeSlug, onNavigate }) {
   const containerRef = useRef(null);
   const itemRefs = useRef({});
 
@@ -37,25 +33,31 @@ export default function MobileHeaderNav({
   }, [activeSlug, categories]);
 
   return (
-    <div
-      ref={containerRef}
-      className="md:hidden overflow-x-auto scrollbar-hide"
-    >
-      <div className="flex gap-6 py-3 px-4 whitespace-nowrap">
-        {items.map((item) => (
-          <button
-            key={item.slug}
-            ref={(el) => (itemRefs.current[item.slug] = el)}
-            onClick={() => onNavigate(item.slug)}
-            className={`shrink-0 pb-1 ${
-              activeSlug === item.slug
-                ? "border-b-2 border-white font-semibold"
-                : "opacity-80 hover:text-(--brand-accent)"
-            }`}
-          >
-            {formatText(item.label, "capitalize")}
-          </button>
-        ))}
+    <div className="relative md:hidden">
+      {/* Degradados en los bordes para insinuar que hay más para deslizar */}
+      <div className="pointer-events-none absolute inset-y-0 left-0 z-10 w-6 bg-gradient-to-r from-(--brand-primary) to-transparent" />
+      <div className="pointer-events-none absolute inset-y-0 right-0 z-10 w-6 bg-gradient-to-l from-(--brand-primary) to-transparent" />
+
+      <div ref={containerRef} className="scrollbar-hide overflow-x-auto">
+        <div className="flex gap-2 py-2.5 px-3 whitespace-nowrap">
+          {items.map((item) => {
+            const active = activeSlug === item.slug;
+            return (
+              <button
+                key={item.slug}
+                ref={(el) => (itemRefs.current[item.slug] = el)}
+                onClick={() => onNavigate(item.slug)}
+                className={`shrink-0 rounded-full px-3.5 py-1.5 text-sm font-medium transition ${
+                  active
+                    ? "bg-white font-semibold text-(--brand-primary) shadow-sm"
+                    : "text-white/85 hover:bg-white/10 hover:text-white"
+                }`}
+              >
+                {formatText(item.label, "capitalize")}
+              </button>
+            );
+          })}
+        </div>
       </div>
     </div>
   );
