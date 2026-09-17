@@ -10,7 +10,9 @@ import {
 import { useRouter, useSearchParams, usePathname } from "next/navigation";
 import useVertical from "@/hooks/useVertical";
 import { useWebsiteContext } from "@/context/websiteContext";
-import { availableDeliveryModes } from "@/utils/shipping";
+import { useCart } from "@/context/cartContext";
+import { availableDeliveryModes, shippingFor } from "@/utils/shipping";
+import { quoteShipping } from "@/lib/utils/api/routes/shipping";
 
 const CheckoutContext = createContext(null);
 
@@ -64,6 +66,104 @@ export function CheckoutProvider({ children, wompiReady = false }) {
   const [touched, setTouched] = useState({});
   const [showConfirm, setShowConfirm] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  // ---- Envío dinámico por transportadora ----
+  const { items: cartItems } = useCart();
+  const subtotal = cartItems.reduce((s, i) => s + i.price * i.quantity, 0);
+  // ¿La tienda tiene transportadoras configuradas? Entonces el costo/tiempo se
+  // cotiza por destino en el backend; si no, se usa el esquema legado.
+  const carrierMode =
+    Array.isArray(storeShipping?.carriers) &&
+    storeShipping.carriers.some((c) => c && c.enabled !== false);
+  const [shippingOptions, setShippingOptions] = useState([]);
+  const [selectedCarrierId, setSelectedCarrierId] = useState(null);
+  const [shippingLoading, setShippingLoading] = useState(false);
+
+  // Al elegir departamento/ciudad (o cambiar el carrito), cotiza el envío por
+  // transportadora en el backend. Debounce para no consultar en cada tecla.
+  useEffect(() => {
+    if (!carrierMode || !needsAddress || !formData.department || subtotal <= 0) {
+      setShippingOptions([]);
+      return;
+    }
+    let alive = true;
+    setShippingLoading(true);
+    const t = setTimeout(async () => {
+      try {
+        const res = await quoteShipping({
+          department: formData.department,
+          city: formData.city,
+          subtotal,
+        });
+        if (!alive) return;
+        const opts = res?.data || [];
+        setShippingOptions(opts);
+        setSelectedCarrierId((prev) =>
+          prev && opts.some((o) => o.carrierId === prev)
+            ? prev
+            : opts[0]?.carrierId || null,
+        );
+      } catch {
+        if (alive) setShippingOptions([]);
+      } finally {
+        if (alive) setShippingLoading(false);
+      }
+    }, 350);
+    return () => {
+      alive = false;
+      clearTimeout(t);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [carrierMode, needsAddress, formData.department, formData.city, subtotal]);
+
+  // Resultado de envío que consume el checkout (costo, tiempo, etiqueta).
+  const shipping = (() => {
+    if (carrierMode && needsAddress) {
+      const opt =
+        shippingOptions.find((o) => o.carrierId === selectedCarrierId) ||
+        shippingOptions[0] ||
+        null;
+      if (!opt) {
+        return {
+          mode: "carrier",
+          ready: false,
+          cost: 0,
+          free: false,
+          days: null,
+          carrierName: null,
+          options: shippingOptions,
+          loading: shippingLoading,
+          label: shippingLoading ? "Calculando…" : "Elige tu ciudad",
+          message: "",
+        };
+      }
+      return {
+        mode: "carrier",
+        ready: true,
+        cost: opt.cost,
+        free: opt.free,
+        days: opt.days,
+        carrierName: opt.name,
+        options: shippingOptions,
+        loading: shippingLoading,
+        label: opt.cost === 0 ? "Gratis" : `$${opt.cost.toLocaleString()}`,
+        message: "",
+      };
+    }
+    const legacy = shippingFor(storeShipping, deliveryMethod, subtotal);
+    return {
+      mode: "legacy",
+      ready: true,
+      cost: legacy.cost,
+      free: legacy.cost === 0,
+      days: null,
+      carrierName: null,
+      options: [],
+      loading: false,
+      label: legacy.label,
+      message: legacy.message,
+    };
+  })();
 
   // "Recordar lo ya escrito": el checkout guarda el formulario en el navegador y
   // lo restaura en la próxima visita/compra (en ESTE dispositivo). Se hace en
@@ -240,6 +340,11 @@ export function CheckoutProvider({ children, wompiReady = false }) {
         deliveryModes: modes,
         storeShipping,
         needsAddress,
+        // Envío dinámico por transportadora
+        subtotal,
+        shipping,
+        selectedCarrierId,
+        setSelectedCarrierId,
         paymentMethod,
         setPaymentMethod,
         isLocked,

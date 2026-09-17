@@ -1,11 +1,9 @@
 "use client";
 
-import { useCart } from "@/context/cartContext";
-import { shippingFor } from "@/utils/shipping";
 import { useCheckout } from "@/context/checkoutContext";
 import useVertical from "@/hooks/useVertical";
 import CheckoutCartItems from "./components/checkoutCartItems";
-import { LockClosedIcon } from "@heroicons/react/24/outline";
+import { LockClosedIcon, ClockIcon } from "@heroicons/react/24/outline";
 
 const DELIVERY_ROW = {
   local_delivery: "Domicilio",
@@ -31,18 +29,21 @@ const FIELD_LABELS = {
 };
 
 export default function CheckoutSummary() {
-  const { items } = useCart();
-  const { isFormValid, setShowErrors, setShowConfirm, deliveryMethod, storeShipping } =
-    useCheckout();
+  const {
+    isFormValid,
+    setShowErrors,
+    setShowConfirm,
+    deliveryMethod,
+    needsAddress,
+    subtotal,
+    shipping,
+  } = useCheckout();
   const v = useVertical();
 
-  const subtotal = items.reduce((sum, i) => sum + i.price * i.quantity, 0);
-  // Costo de envío según lo configurado por el dueño (fallback legado).
-  const { cost, label, message } = shippingFor(
-    storeShipping,
-    deliveryMethod,
-    subtotal,
-  );
+  const cost = shipping.cost;
+  const label = shipping.label;
+  const message = shipping.message;
+  const days = shipping.days;
   const total = subtotal + cost;
   // Domicilio a domicilio (shipping/local_delivery) muestra su costo; los demás
   // (pickup/dine_in) muestran su etiqueta sin cobro.
@@ -58,6 +59,10 @@ export default function CheckoutSummary() {
     .filter((k) => k !== "addressDetail" && FIELD_LABELS[k])
     .map((k) => FIELD_LABELS[k]);
 
+  // Con transportadoras, no continuar hasta tener el envío cotizado por ciudad.
+  const shippingPending =
+    needsAddress && shipping.mode === "carrier" && !shipping.ready;
+
   function handleContinue() {
     if (!valid) {
       setShowErrors(true);
@@ -68,6 +73,7 @@ export default function CheckoutSummary() {
       }
       return;
     }
+    if (shippingPending) return;
     setShowConfirm(true);
   }
 
@@ -88,7 +94,14 @@ export default function CheckoutSummary() {
               <div className="flex flex-col">
                 <span className="text-(--text-muted)">
                   {deliveryMethod === "local_delivery" ? "Domicilio" : "Envío"}
+                  {shipping.carrierName ? ` · ${shipping.carrierName}` : ""}
                 </span>
+                {days && (
+                  <span className="flex items-center gap-1 text-xs text-(--text-muted)">
+                    <ClockIcon className="h-3.5 w-3.5" />
+                    Entrega: {days}
+                  </span>
+                )}
                 {message && (
                   <span className="text-xs text-(--text-muted)">{message}</span>
                 )}
@@ -96,7 +109,7 @@ export default function CheckoutSummary() {
               <span
                 className={`font-medium ${cost === 0 ? "text-(--success)" : ""}`}
               >
-                {label}
+                {shipping.loading ? "Calculando…" : label}
               </span>
             </div>
           ) : deliveryRowLabel ? (
@@ -132,10 +145,11 @@ export default function CheckoutSummary() {
 
         <button
           onClick={handleContinue}
-          className="hidden lg:flex w-full mt-4 items-center justify-center gap-2 py-3 rounded-lg font-semibold transition cursor-pointer bg-(--cta-primary) text-(--text-inverted) hover:opacity-90"
+          disabled={shippingPending}
+          className="hidden lg:flex w-full mt-4 items-center justify-center gap-2 py-3 rounded-lg font-semibold transition cursor-pointer bg-(--cta-primary) text-(--text-inverted) hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-60"
         >
           <LockClosedIcon className="w-5 h-5" />
-          Continuar con el pago
+          {shippingPending ? "Calculando envío…" : "Continuar con el pago"}
         </button>
 
         <p className="mt-3 text-xs text-center text-(--text-muted)">
@@ -151,10 +165,11 @@ export default function CheckoutSummary() {
         )}
         <button
           onClick={handleContinue}
-          className="w-full flex items-center justify-center gap-2 py-3 rounded-lg font-semibold transition bg-(--cta-primary) text-(--text-inverted)"
+          disabled={shippingPending}
+          className="w-full flex items-center justify-center gap-2 py-3 rounded-lg font-semibold transition bg-(--cta-primary) text-(--text-inverted) disabled:opacity-60"
         >
           <LockClosedIcon className="w-5 h-5" />
-          Continuar con el pago
+          {shippingPending ? "Calculando envío…" : "Continuar con el pago"}
         </button>
       </div>
     </>

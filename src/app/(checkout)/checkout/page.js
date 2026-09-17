@@ -12,7 +12,6 @@ import CheckoutConfirmModal from "@/components/layout/checkout/components/checko
 import { useCart } from "@/context/cartContext";
 import { useWebsiteContext } from "@/context/websiteContext";
 import { getCompanyName } from "@/lib/website";
-import { shippingFor } from "@/utils/shipping";
 import { openWompiCheckout } from "@/lib/wompi/wompiCheckout";
 import { createOrder } from "@/lib/utils/api/routes/checkout";
 import { useToast } from "@/context/toastContext";
@@ -29,7 +28,9 @@ export default function CheckoutPage() {
     deliveryMethod,
     needsAddress,
     prefill,
-    storeShipping,
+    subtotal,
+    shipping,
+    selectedCarrierId,
   } = useCheckout();
 
   const { items, clearCart } = useCart();
@@ -76,21 +77,21 @@ export default function CheckoutPage() {
     // servidor: al pedir la firma, si la tienda no tiene pagos en línea, responde
     // con error y se muestra el mensaje amable del catch.
 
+    // Con transportadoras, esperar a que el envío esté cotizado (evita cobrar $0
+    // en pago en línea). El backend igual recalcula, pero esto cuida el monto.
+    if (needsAddress && shipping?.mode === "carrier" && !shipping.ready) {
+      toast.error("Estamos calculando el envío para tu ciudad, espera un momento.");
+      return;
+    }
+
     setIsSubmitting(true);
 
     try {
       const { billingSameAsShipping } = formData;
 
-      const subtotal = items.reduce(
-        (sum, item) => sum + item.price * item.quantity,
-        0,
-      );
-      // Costo de envío según lo configurado por el dueño (fallback legado).
-      const { cost: shippingCost } = shippingFor(
-        storeShipping,
-        deliveryMethod,
-        subtotal,
-      );
+      // Costo de envío: fuente = contexto (transportadora por destino o legado).
+      // El backend lo recalcula al crear el pedido (autoridad).
+      const shippingCost = shipping?.cost || 0;
 
       const order = await createOrder({
         customer: {
@@ -127,6 +128,7 @@ export default function CheckoutPage() {
         // y queda EN_VALIDACION hasta que Wompi confirme.
         paymentMethod: paymentMethod === "online" ? "TRANSFERENCIA" : "EFECTIVO",
         shippingCost,
+        carrierId: selectedCarrierId || undefined,
         deliveryMethod,
         notes: formData.notes || undefined,
       });

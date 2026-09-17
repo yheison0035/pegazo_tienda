@@ -9,6 +9,7 @@ import Card from "./components/card";
 import ShippingLocationBlock from "./components/shippingLocationBlock";
 import AddressBuilder from "./components/addressBuilder";
 import SavedAddresses from "./components/savedAddresses";
+import CarrierOptions from "./components/carrierOptions";
 
 const MODE_LABEL = {
   shipping: "Envío a domicilio",
@@ -229,6 +230,9 @@ export default function CheckoutForm() {
           setFormData((prev) => ({ ...prev, address: value }))
         }
       />
+
+      {/* Transportadoras + tiempos de entrega (según la ciudad) */}
+      <CarrierOptions />
 
       {/* Instrucciones / mesa: para recoger en tienda o consumo en el lugar */}
       {!needsAddress && (

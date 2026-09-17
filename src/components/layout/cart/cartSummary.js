@@ -24,10 +24,20 @@ export default function CartSummary({ onClose }) {
   );
 
   const storeShipping = website?.company?.storeShipping || null;
+  // Si la tienda usa transportadoras, el envío se calcula por CIUDAD en el
+  // checkout; en el carrito no se puede saber aún.
+  const carrierMode =
+    Array.isArray(storeShipping?.carriers) &&
+    storeShipping.carriers.some((c) => c && c.enabled !== false);
   const modes = availableDeliveryModes(storeShipping, vertical?.fulfillment);
   const estimateMode =
     modes.find((m) => m === "shipping" || m === "local_delivery") || modes[0];
-  const { cost: shippingCost } = shippingFor(storeShipping, estimateMode, subtotal);
+  const { cost: legacyShippingCost } = shippingFor(
+    storeShipping,
+    estimateMode,
+    subtotal,
+  );
+  const shippingCost = carrierMode ? 0 : legacyShippingCost;
   const total = subtotal + shippingCost;
 
   // Ahorro total (suma de descuentos por precio anterior).
@@ -41,7 +51,8 @@ export default function CartSummary({ onClose }) {
   const totalUnits = items.reduce((acc, item) => acc + item.quantity, 0);
 
   // Barra de progreso "envío gratis" (si el dueño configuró un umbral).
-  const freeFrom = storeShipping?.shipping?.freeFrom ?? null;
+  const freeFrom =
+    storeShipping?.freeFrom ?? storeShipping?.shipping?.freeFrom ?? null;
   const hasFreeShipping = freeFrom != null && freeFrom > 0;
   const reachedFree = hasFreeShipping && subtotal >= freeFrom;
   const remaining = hasFreeShipping ? Math.max(0, freeFrom - subtotal) : 0;
@@ -130,17 +141,25 @@ Quedo atento para finalizar el pedido.`;
             </div>
           )}
 
-          <div className="flex justify-between text-sm text-(--text-secondary)">
+          <div className="flex justify-between gap-3 text-sm text-(--text-secondary)">
             <span>Envío estimado</span>
-            <span
-              className={`font-medium ${
-                shippingCost === 0
-                  ? "text-(--success)"
-                  : "text-(--text-primary)"
-              }`}
-            >
-              {shippingCost === 0 ? "Gratis" : `$${shippingCost.toLocaleString()}`}
-            </span>
+            {carrierMode && !reachedFree ? (
+              <span className="text-right text-xs text-(--text-muted)">
+                Se calcula por tu ciudad en el pago
+              </span>
+            ) : (
+              <span
+                className={`font-medium ${
+                  shippingCost === 0
+                    ? "text-(--success)"
+                    : "text-(--text-primary)"
+                }`}
+              >
+                {shippingCost === 0
+                  ? "Gratis"
+                  : `$${shippingCost.toLocaleString()}`}
+              </span>
+            )}
           </div>
         </div>
 
