@@ -6,6 +6,7 @@ import OffersSection from "@/components/sections/offersSection";
 import SectionWrapper from "../sectionWrapper";
 import CategoriesSection from "@/components/sections/categoriesSection";
 import NewsSection from "@/components/sections/newsSection";
+import BestSellersSection from "@/components/sections/bestSellersSection";
 import HeroSection from "@/components/sections/heroSection";
 
 export default function Main() {
@@ -42,6 +43,10 @@ export default function Main() {
         <div className="pt-10">
           <SectionWrapper>
             <CategoriesSection />
+          </SectionWrapper>
+
+          <SectionWrapper>
+            <BestSellersSection />
           </SectionWrapper>
 
           <SectionWrapper>

@@ -13,6 +13,7 @@ import NewsSection from "@/components/sections/newsSection";
 import OffersSection from "@/components/sections/offersSection";
 import SectionWrapper from "../sectionWrapper";
 import RelatedProducts from "@/components/sections/relatedProductsSection";
+import BestSellersSection from "@/components/sections/bestSellersSection";
 
 export default function ProductPage({ category, productSlug, initialProduct = null }) {
   // El producto ya viene resuelto del servidor (así sale en el HTML); solo se
@@ -78,6 +79,9 @@ export default function ProductPage({ category, productSlug, initialProduct = nu
 
           <SectionWrapper>
             <RelatedProducts productSlug={product.slug} />
+          </SectionWrapper>
+          <SectionWrapper>
+            <BestSellersSection />
           </SectionWrapper>
           <SectionWrapper>
             <NewsSection />

@@ -4,6 +4,7 @@ import { useState, useCallback } from "react";
 import {
   getNews,
   getOffers,
+  getBestSellers,
   getRelatedProducts,
 } from "../routes/sections/index";
 
@@ -26,6 +27,7 @@ export default function useSections() {
 
   const getNewsFn = useCallback(() => wrap(getNews), [wrap]);
   const getOffersFn = useCallback(() => wrap(getOffers), [wrap]);
+  const getBestSellersFn = useCallback(() => wrap(getBestSellers), [wrap]);
   const getRelatedProductsFn = useCallback(
     (productSlug) => wrap(getRelatedProducts, productSlug),
     [wrap],
@@ -34,6 +36,7 @@ export default function useSections() {
   return {
     getNews: getNewsFn,
     getOffers: getOffersFn,
+    getBestSellers: getBestSellersFn,
     getRelatedProducts: getRelatedProductsFn,
     loading,
     error,
