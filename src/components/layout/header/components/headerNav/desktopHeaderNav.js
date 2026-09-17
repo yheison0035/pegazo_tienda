@@ -99,6 +99,7 @@ export default function DesktopHeaderNav({
     { key: "home", label: "Inicio" },
     { key: "novedades", label: "Novedades" },
     { key: "ofertas", label: "Ofertas" },
+    { key: "mas-vendidos", label: "Más vendidos" },
   ];
 
   const linkClass = (active) =>

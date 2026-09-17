@@ -24,6 +24,8 @@ export default function CatalogLayout({ category, initialCatalog = null }) {
   const catalogParams = useMemo(() => {
     if (category === "novedades") return { mode: "new", ...filtersFromUrl };
     if (category === "ofertas") return { mode: "offers", ...filtersFromUrl };
+    if (category === "mas-vendidos")
+      return { mode: "bestsellers", ...filtersFromUrl };
     return { mode: "category", category, ...filtersFromUrl };
   }, [category, filtersFromUrl]);
 

@@ -12,6 +12,7 @@ export default function MobileHeaderNav({ categories, activeSlug, onNavigate }) 
     { label: "Inicio", slug: "home" },
     { label: "Novedades", slug: "novedades" },
     { label: "Ofertas", slug: "ofertas" },
+    { label: "Más vendidos", slug: "mas-vendidos" },
     ...categories.map((c) => ({
       label: c.name,
       slug: slugifyCategory(c.name),

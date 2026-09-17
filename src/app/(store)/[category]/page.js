@@ -18,6 +18,7 @@ import {
 function catalogQuery(category) {
   if (category === "novedades") return "mode=new";
   if (category === "ofertas") return "mode=offers";
+  if (category === "mas-vendidos") return "mode=bestsellers";
 
   return `mode=category&category=${encodeURIComponent(category)}`;
 }
@@ -25,6 +26,7 @@ function catalogQuery(category) {
 function categoryTitle(category) {
   if (category === "novedades") return "Novedades";
   if (category === "ofertas") return "Ofertas";
+  if (category === "mas-vendidos") return "Más vendidos";
 
   return humanize(category);
 }
