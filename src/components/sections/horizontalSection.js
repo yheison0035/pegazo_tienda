@@ -98,7 +98,7 @@ export default function HorizontalSection({
           />
         ) : layout === "grid" ? (
           <div className="relative px-2 sm:px-16">
-            <div className="grid gap-4 grid-cols-2 sm:grid-cols-3">
+            <div className="grid auto-rows-fr gap-4 grid-cols-2 sm:grid-cols-3">
               {visibleItems.map((item) => {
                 if (type === "category") {
                   return <CategoryCard key={item.id} category={item} />;
@@ -124,7 +124,7 @@ export default function HorizontalSection({
             className="flex gap-4 overflow-x-auto pb-2 scroll-smooth scrollbar-hide px-2 sm:px-16"
           >
             {items.map((item) => (
-              <div key={item.id} className="min-w-60 max-w-64">
+              <div key={item.id} className="flex min-w-60 max-w-64">
                 <ProductCard
                   product={item}
                   category={slugifyCategory(item.category)}

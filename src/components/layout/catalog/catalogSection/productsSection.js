@@ -29,8 +29,8 @@ export default function ProductsSection({ category, catalog }) {
   // Menú: filas ANCHAS a todo el ancho del catálogo (una sola columna) para que
   // cada card respire; solo en pantallas muy grandes pasa a 2 columnas.
   const gridClass = isMenu
-    ? "grid grid-cols-1 2xl:grid-cols-2 gap-4 2xl:gap-5"
-    : "grid grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4 gap-4 sm:gap-5";
+    ? "grid auto-rows-fr grid-cols-1 2xl:grid-cols-2 gap-4 2xl:gap-5"
+    : "grid auto-rows-fr grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4 gap-4 sm:gap-5";
 
   const sentinelRef = useRef(null);
   const observerRef = useRef(null);

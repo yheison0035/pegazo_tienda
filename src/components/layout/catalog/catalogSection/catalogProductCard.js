@@ -203,7 +203,7 @@ export default function CatalogProductCard({ product, category }) {
   // prominente con % de descuento, título liviano y una acción clara. Colores
   // 100% del tema del dueño.
   return (
-    <article className="group flex flex-col overflow-hidden rounded-lg border border-(--border-soft) bg-(--bg-page) shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:border-(--border-strong) hover:shadow-(--shadow-lg)">
+    <article className="group flex h-full w-full flex-col overflow-hidden rounded-lg border border-(--border-soft) bg-(--bg-page) shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:border-(--border-strong) hover:shadow-(--shadow-lg)">
       {/* Imagen con galería en hover (cambiar fotos sin salir de la lista).
           La imagen va en ABSOLUTO dentro del cuadro cuadrado: el tamaño de la
           card no depende de la foto, así no "salta" al cambiar de imagen. */}
@@ -313,9 +313,13 @@ export default function CatalogProductCard({ product, category }) {
           </div>
         ) : null}
 
+        {/* Bloque de precio anclado al fondo: así el precio queda a la MISMA
+            altura en todas las tarjetas, sin importar si el producto tiene
+            marca, rating o descripción arriba. */}
+        <div className="mt-auto flex flex-col gap-1 pt-1">
         {/* Precio anterior tachado */}
         {product.oldPrice && product.oldPrice > product.price && (
-          <span className="mt-0.5 text-xs text-(--text-muted) line-through">
+          <span className="text-xs text-(--text-muted) line-through">
             ${product.oldPrice.toLocaleString()}
           </span>
         )}
@@ -348,6 +352,7 @@ export default function CatalogProductCard({ product, category }) {
         {error && (
           <span className="text-xs font-medium text-(--danger)">{error}</span>
         )}
+        </div>
       </Link>
     </article>
   );
