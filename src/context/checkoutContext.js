@@ -70,9 +70,11 @@ export function CheckoutProvider({ children, wompiReady = false }) {
   // ---- Envío dinámico por transportadora ----
   const { items: cartItems } = useCart();
   const subtotal = cartItems.reduce((s, i) => s + i.price * i.quantity, 0);
-  // ¿La tienda tiene transportadoras configuradas? Entonces el costo/tiempo se
-  // cotiza por destino en el backend; si no, se usa el esquema legado.
+  // Las transportadoras aplican SOLO al "Envío nacional" (shipping). El
+  // "Domicilio local" usa la tarifa plana del dueño (mensajero propio), y
+  // recoger/mesa no cobran. Así no se mezclan los modos de entrega.
   const carrierMode =
+    deliveryMethod === "shipping" &&
     Array.isArray(storeShipping?.carriers) &&
     storeShipping.carriers.some((c) => c && c.enabled !== false);
   const [shippingOptions, setShippingOptions] = useState([]);

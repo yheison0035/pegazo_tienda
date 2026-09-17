@@ -3,7 +3,7 @@
 import { useCheckout } from "@/context/checkoutContext";
 import useVertical from "@/hooks/useVertical";
 import CheckoutCartItems from "./components/checkoutCartItems";
-import { LockClosedIcon, ClockIcon } from "@heroicons/react/24/outline";
+import { LockClosedIcon } from "@heroicons/react/24/outline";
 
 const DELIVERY_ROW = {
   local_delivery: "Domicilio",
@@ -43,7 +43,6 @@ export default function CheckoutSummary() {
   const cost = shipping.cost;
   const label = shipping.label;
   const message = shipping.message;
-  const days = shipping.days;
   const total = subtotal + cost;
   // Domicilio a domicilio (shipping/local_delivery) muestra su costo; los demás
   // (pickup/dine_in) muestran su etiqueta sin cobro.
@@ -95,12 +94,6 @@ export default function CheckoutSummary() {
                 <span className="text-(--text-muted)">
                   {deliveryMethod === "local_delivery" ? "Domicilio" : "Envío"}
                 </span>
-                {days && (
-                  <span className="flex items-center gap-1 text-xs text-(--text-muted)">
-                    <ClockIcon className="h-3.5 w-3.5" />
-                    Entrega: {days}
-                  </span>
-                )}
                 {message && (
                   <span className="text-xs text-(--text-muted)">{message}</span>
                 )}
