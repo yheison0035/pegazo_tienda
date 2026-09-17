@@ -38,8 +38,8 @@ export default function CatalogLayout({ category, initialCatalog = null }) {
             sticky
             top-[calc(var(--header-nav-height)+16px)]
             self-start
-            transition-[top]
-            duration-200
+            max-h-[calc(100dvh-var(--header-nav-height)-32px)]
+            overflow-y-auto overscroll-contain scrollbar-hide
             lg:border-r lg:border-(--border-soft) lg:pr-6
           "
         >
