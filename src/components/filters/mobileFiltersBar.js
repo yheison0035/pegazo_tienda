@@ -20,7 +20,7 @@ export default function MobileFiltersBar({ total, filters }) {
     <>
       <nav
         className="
-          md:hidden
+          lg:hidden
           sticky
           top-(--header-nav-height)
           z-40

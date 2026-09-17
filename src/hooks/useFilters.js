@@ -30,9 +30,21 @@ export function useFilters() {
     router.push(`?${params.toString()}`);
   }
 
-  function clearAll() {
+  // Aplica varios parámetros en una sola navegación (p. ej. minPrice + maxPrice).
+  function setMany(entries) {
     const params = new URLSearchParams(searchParams);
-    params.forEach((_, key) => params.delete(key));
+    Object.entries(entries).forEach(([key, value]) => {
+      value ? params.set(key, value) : params.delete(key);
+    });
+    router.push(`?${params.toString()}`);
+  }
+
+  function clearAll() {
+    // Conserva el orden (sort) porque no es un filtro; limpia el resto.
+    const params = new URLSearchParams(searchParams);
+    const sort = params.get("sort");
+    [...params.keys()].forEach((key) => params.delete(key));
+    if (sort) params.set("sort", sort);
     router.push(`?${params.toString()}`);
   }
 
@@ -40,10 +52,11 @@ export function useFilters() {
     return (searchParams.get(key) || "").split(",").includes(value);
   }
 
-  const count = [...searchParams.entries()].reduce((acc, [_, value]) => {
-    if (!value) return acc;
+  // Cuenta solo filtros reales (el orden no cuenta como filtro).
+  const count = [...searchParams.entries()].reduce((acc, [key, value]) => {
+    if (!value || key === "sort") return acc;
     return acc + value.split(",").filter(Boolean).length;
   }, 0);
 
-  return { toggle, set, get, has, clearAll, count };
+  return { toggle, set, setMany, get, has, clearAll, count };
 }

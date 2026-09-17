@@ -2,126 +2,45 @@
 
 import Drawer from "./drawer";
 import Portal from "../ui/portal";
+import FilterGroups from "./filterGroups";
 import { useFilters } from "@/hooks/useFilters";
 
 export default function FiltersDrawer({ open, onClose, filters }) {
-  const { toggle, has, set, clearAll, count, get } = useFilters();
+  const { clearAll, count } = useFilters();
 
   if (!filters) return null;
 
   return (
     <Portal>
       <Drawer open={open} onClose={onClose} title="Filtrar productos">
-        <div className="flex justify-between items-center mb-4">
+        <div className="mb-4 flex items-center justify-between">
           <span className="text-sm text-(--text-muted)">
-            {count} filtro{count !== 1 && "s"} activo
-            {count !== 1 && "s"}
+            {count} filtro{count !== 1 && "s"} activo{count !== 1 && "s"}
           </span>
-
           {count > 0 && (
             <button
+              type="button"
               onClick={clearAll}
-              className="text-sm text-(--danger) hover:underline"
+              className="text-sm font-semibold text-(--danger) hover:underline cursor-pointer"
             >
               Limpiar
             </button>
           )}
         </div>
 
-        <Section title="Disponibilidad">
-          {[
-            ["", "Todos"],
-            ["in", "Disponibles"],
-            ["out", "Agotados"],
-          ].map(([val, label]) => (
-            <label
-              key={val || "all"}
-              className="flex items-center gap-2 text-sm cursor-pointer"
-            >
-              <input
-                type="radio"
-                name="availability-mobile"
-                checked={(get("availability") || "") === val}
-                onChange={() => set("availability", val)}
-                className="accent-(--brand-primary)"
-              />
-              {label}
-            </label>
-          ))}
-        </Section>
+        <FilterGroups filters={filters} />
 
-        {filters.brands?.length > 0 && (
-          <Section title="Marca">
-            {filters.brands.map((b) => (
-              <Check
-                key={b.value}
-                label={`${b.label} (${b.count})`}
-                checked={has("brands", b.value)}
-                onChange={() => toggle("brands", b.value)}
-              />
-            ))}
-          </Section>
-        )}
-
-        {filters.colors?.length > 0 && (
-          <Section title="Color">
-            {filters.colors.map((c) => (
-              <Check
-                key={c.value}
-                label={`${c.label} (${c.count})`}
-                checked={has("colors", c.value)}
-                onChange={() => toggle("colors", c.value)}
-              />
-            ))}
-          </Section>
-        )}
-
-        {filters.price && (
-          <Section title="Precio">
-            <div className="flex gap-3">
-              <input
-                type="number"
-                placeholder={`Desde ${filters.price.min}`}
-                value={get("minPrice")}
-                onChange={(e) => set("minPrice", e.target.value)}
-                className="w-full border border-(--border-soft) rounded px-3 py-2"
-              />
-              <input
-                type="number"
-                placeholder={`Hasta ${filters.price.max}`}
-                value={get("maxPrice")}
-                onChange={(e) => set("maxPrice", e.target.value)}
-                className="w-full border border-(--border-soft) rounded px-3 py-2"
-              />
-            </div>
-          </Section>
-        )}
+        {/* Botón fijo para volver a los resultados */}
+        <div className="sticky bottom-0 -mx-5 -mb-5 mt-5 border-t border-(--border-soft) bg-(--bg-page)/95 px-5 py-3 backdrop-blur">
+          <button
+            type="button"
+            onClick={onClose}
+            className="w-full rounded-lg bg-(--cta-primary) py-3 text-sm font-semibold text-(--text-inverted) transition hover:bg-(--cta-primary-hover) cursor-pointer"
+          >
+            Ver resultados
+          </button>
+        </div>
       </Drawer>
     </Portal>
-  );
-}
-
-function Section({ title, children }) {
-  return (
-    <div className="mb-6">
-      <p className="text-sm font-semibold mb-2 text-(--text-primary)">
-        {title}
-      </p>
-      <div className="space-y-2">{children}</div>
-    </div>
-  );
-}
-
-function Check({ label, checked, onChange }) {
-  return (
-    <label className="flex items-center gap-2 text-sm cursor-pointer">
-      <input
-        type="checkbox"
-        checked={checked}
-        onChange={onChange}
-        className="accent-(--brand-primary)"
-      />
-      {label}
-    </label>
   );
 }

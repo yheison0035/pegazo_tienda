@@ -7,6 +7,7 @@ import SkeletonGrid from "@/components/ui/skeletons/skeletonGrid";
 import Breadcrumbs from "../breadcrumbs";
 import MobileFiltersBar from "@/components/filters/mobileFiltersBar";
 import { DesktopSort } from "@/components/filters/desktopSort";
+import ActiveFilters from "@/components/filters/activeFilters";
 import useVertical from "@/hooks/useVertical";
 import { isOutOfStock } from "@/utils/stock";
 
@@ -51,14 +52,16 @@ export default function ProductsSection({ category, catalog }) {
     <section className="space-y-4">
       <MobileFiltersBar total={shown.length} filters={filters} />
 
-      <div className="md:hidden px-4">
+      <div className="px-4 lg:hidden">
         <Breadcrumbs category={category} />
       </div>
 
-      <div className="hidden md:flex justify-between items-center">
+      <div className="hidden items-center justify-between lg:flex">
         <Breadcrumbs category={category} />
         <DesktopSort filters={filters} />
       </div>
+
+      <ActiveFilters filters={filters} />
 
       <div>
         {products.length === 0 && loadingMore && (
