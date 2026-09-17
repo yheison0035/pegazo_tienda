@@ -94,7 +94,6 @@ export default function CheckoutSummary() {
               <div className="flex flex-col">
                 <span className="text-(--text-muted)">
                   {deliveryMethod === "local_delivery" ? "Domicilio" : "Envío"}
-                  {shipping.carrierName ? ` · ${shipping.carrierName}` : ""}
                 </span>
                 {days && (
                   <span className="flex items-center gap-1 text-xs text-(--text-muted)">
