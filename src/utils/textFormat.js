@@ -9,7 +9,11 @@ export function formatText(text, type = "capitalize") {
       return text.toUpperCase();
 
     case "capitalize":
-      return text.toLowerCase().replace(/\b\w/g, (char) => char.toUpperCase());
+      // Unicode-aware: sube la primera letra de cada palabra respetando tildes/ñ
+      // (el antiguo \b\w rompía "más" -> "MáS").
+      return text
+        .toLowerCase()
+        .replace(/(^|\s)(\p{L})/gu, (_, sep, ch) => sep + ch.toUpperCase());
 
     case "sentence":
       return text.charAt(0).toUpperCase() + text.slice(1).toLowerCase();

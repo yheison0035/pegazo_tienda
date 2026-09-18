@@ -9,10 +9,10 @@ export default function MobileHeaderNav({ categories, activeSlug, onNavigate }) 
   const itemRefs = useRef({});
 
   const items = [
-    { label: "Inicio", slug: "home" },
-    { label: "Novedades", slug: "novedades" },
-    { label: "Ofertas", slug: "ofertas" },
-    { label: "Más vendidos", slug: "mas-vendidos" },
+    { label: "Inicio", slug: "home", fixed: true },
+    { label: "Novedades", slug: "novedades", fixed: true },
+    { label: "Ofertas", slug: "ofertas", fixed: true },
+    { label: "Más vendidos", slug: "mas-vendidos", fixed: true },
     ...categories.map((c) => ({
       label: c.name,
       slug: slugifyCategory(c.name),
@@ -54,7 +54,7 @@ export default function MobileHeaderNav({ categories, activeSlug, onNavigate }) 
                     : "text-white/85 hover:bg-white/10 hover:text-white"
                 }`}
               >
-                {formatText(item.label, "capitalize")}
+                {item.fixed ? item.label : formatText(item.label, "capitalize")}
               </button>
             );
           })}
