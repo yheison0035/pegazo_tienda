@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
+import Link from "next/link";
 import { ChevronLeftIcon, ChevronRightIcon } from "@heroicons/react/24/outline";
 import SkeletonGrid from "../ui/skeletons/skeletonGrid";
 import ProductCard from "@/components/layout/catalog/catalogSection/productCard";
@@ -18,6 +19,8 @@ export default function HorizontalSection({
 
   itemsPerPageDesktop = 6,
   itemsPerPageMobile = 4,
+
+  viewAllHref = null,
 }) {
   const [page, setPage] = useState(0);
   const [isMobile, setIsMobile] = useState(false);
@@ -56,14 +59,35 @@ export default function HorizontalSection({
 
   return (
     <section>
-      <div className="text-center mb-8">
-        <h2 className="text-3xl font-extrabold text-(--text-primary)">
-          {title}
-        </h2>
-        {subtitle && (
-          <p className="text-sm text-(--text-muted) mt-2">{subtitle}</p>
-        )}
-      </div>
+      {viewAllHref ? (
+        // Encabezado estilo tienda: título a la izquierda + "Ver todos" a la
+        // derecha (accionable), para las secciones que tienen su propia página.
+        <div className="mb-6 flex items-end justify-between gap-4 px-1">
+          <div>
+            <h2 className="text-2xl font-extrabold text-(--text-primary) sm:text-3xl">
+              {title}
+            </h2>
+            {subtitle && (
+              <p className="mt-1 text-sm text-(--text-muted)">{subtitle}</p>
+            )}
+          </div>
+          <Link
+            href={viewAllHref}
+            className="flex-none whitespace-nowrap text-sm font-semibold text-(--brand-accent) transition hover:underline"
+          >
+            Ver todos →
+          </Link>
+        </div>
+      ) : (
+        <div className="text-center mb-8">
+          <h2 className="text-3xl font-extrabold text-(--text-primary)">
+            {title}
+          </h2>
+          {subtitle && (
+            <p className="text-sm text-(--text-muted) mt-2">{subtitle}</p>
+          )}
+        </div>
+      )}
 
       <div className="relative">
         <Arrow

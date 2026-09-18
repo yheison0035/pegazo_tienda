@@ -27,6 +27,7 @@ export default function BestSellersSection() {
     <HorizontalSection
       title="Más vendidos"
       subtitle="Los favoritos de nuestros clientes"
+      viewAllHref="/mas-vendidos"
       items={items}
       loading={loading}
       type="product"

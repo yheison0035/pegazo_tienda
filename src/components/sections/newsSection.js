@@ -27,6 +27,7 @@ export default function NewsSection() {
     <HorizontalSection
       title="Novedades"
       subtitle="Lo último que llegó para ti"
+      viewAllHref="/novedades"
       items={news}
       loading={loading}
       type="product"

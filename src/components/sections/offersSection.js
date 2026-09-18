@@ -27,6 +27,7 @@ export default function OffersSection() {
     <HorizontalSection
       title="Ofertas"
       subtitle="Descuentos que no duran"
+      viewAllHref="/ofertas"
       items={offers}
       loading={loading}
       type="product"

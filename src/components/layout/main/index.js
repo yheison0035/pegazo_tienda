@@ -8,6 +8,7 @@ import CategoriesSection from "@/components/sections/categoriesSection";
 import NewsSection from "@/components/sections/newsSection";
 import BestSellersSection from "@/components/sections/bestSellersSection";
 import HeroSection from "@/components/sections/heroSection";
+import BenefitsStrip from "@/components/sections/benefitsStrip";
 
 export default function Main() {
   // Mide la altura REAL del header (fijo) para que el contenido arranque justo
@@ -38,6 +39,9 @@ export default function Main() {
     >
       {/* Banner a TODO el ancho, pegado bajo el header (fuera del contenedor). */}
       <HeroSection />
+
+      {/* Franja de confianza (envío, contra entrega, pago seguro, garantía). */}
+      <BenefitsStrip />
 
       <Container>
         <div className="pt-10">
